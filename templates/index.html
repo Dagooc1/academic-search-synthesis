@@ -3,242 +3,495 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Academic Research Hub - Literature Search & Synthesis</title>
+    <title>Academic Research Hub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
         .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary-gradient);
             color: white;
-            padding: 80px 0;
+            padding: 100px 0;
             margin-bottom: 50px;
         }
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
+        
+        .feature-card {
+            border: none;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            height: 100%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+        
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            font-size: 30px;
+        }
+        
         .search-box {
             max-width: 800px;
             margin: 0 auto;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
         }
-        .btn-export {
-            margin: 2px;
+        
+        .source-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 50px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .source-badge i {
+            margin-right: 8px;
+        }
+        
+        .stats-counter {
+            text-align: center;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stats-counter .number {
+            font-size: 3rem;
+            font-weight: bold;
+            background: var(--secondary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .animated-search {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .toggle-label {
+            margin: 0 15px;
+            font-weight: 500;
+        }
+        
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 40px 0;
+            margin-top: 80px;
+        }
+        
+        .quick-search {
+            margin: 30px 0;
+        }
+        
+        .quick-search .btn {
+            margin: 5px;
+            border-radius: 25px;
+            padding: 8px 20px;
         }
     </style>
 </head>
 <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/">
+                <i class="bi bi-journal-richtext me-2"></i>Academic Research Hub
+            </a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="#features">Features</a>
+                <a class="nav-link" href="#sources">Sources</a>
+                <a class="nav-link" href="#about">About</a>
+            </div>
+        </div>
+    </nav>
+
     <!-- Hero Section -->
     <div class="hero-section">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-8 mx-auto text-center">
-                    <h1 class="display-4 mb-4">
-                        <i class="bi bi-journal-richtext"></i> Academic Research Hub
-                    </h1>
-                    <p class="lead mb-4">
-                        Search, analyze, and synthesize academic literature. Perfect for RRLs, 
-                        literature reviews, and research papers with automatic citation formatting.
-                    </p>
-                    
-                    <div class="search-box">
-                        <form action="/search" method="POST" class="card shadow-lg">
-                            <div class="card-body p-4">
-                                <h4 class="card-title mb-4">Search Academic Literature</h4>
-                                
-                                <div class="mb-3">
-                                    <label class="form-label">Research Topic</label>
-                                    <input type="text" class="form-control form-control-lg" 
-                                           name="query" placeholder="e.g., machine learning applications in healthcare, climate change mitigation strategies..." 
-                                           required>
-                                </div>
-                                
-                                <div class="row mb-4">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Number of Results</label>
-                                        <select class="form-select" name="max_results">
-                                            <option value="10">10 results</option>
-                                            <option value="15" selected>15 results</option>
-                                            <option value="20">20 results</option>
-                                            <option value="25">25 results</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Search Databases</label>
-                                        <div class="form-control" style="height: auto; padding: 10px;">
-                                            <span class="badge bg-primary me-1">arXiv</span>
-                                            <span class="badge bg-primary me-1">Semantic Scholar</span>
-                                            <span class="badge bg-secondary me-1">Academic Journals</span>
-                                            <span class="badge bg-secondary me-1">Conference Papers</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-light btn-lg">
-                                        <i class="bi bi-search"></i> Search Academic Databases
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold mb-4">Search Millions of Academic Papers</h1>
+            <p class="lead mb-5">One platform to discover, analyze, and synthesize research from top academic sources worldwide</p>
+            
+            <!-- Search Box -->
+            <div class="search-box animated-search">
+                <form action="/search" method="POST" id="searchForm">
+                    <div class="input-group input-group-lg mb-4">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search text-primary"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control border-start-0 ps-0" 
+                               name="query" 
+                               placeholder="Enter research topic, keywords, or paper title..." 
+                               required
+                               autofocus>
                     </div>
-                </div>
+                    
+                    <!-- Advanced Options -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Number of Results</label>
+                            <select class="form-select" name="max_results">
+                                <option value="10">10 results</option>
+                                <option value="20" selected>20 results</option>
+                                <option value="30">30 results</option>
+                                <option value="50">50 results</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Search Options</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="include_google_scholar" id="includeGoogleScholar" checked>
+                                <label class="form-check-label" for="includeGoogleScholar">
+                                    Include Google Scholar
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="clear_cache" id="clearCache">
+                                <label class="form-check-label" for="clearCache">
+                                    Clear cache (fresh search)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Search Suggestions -->
+                    <div class="quick-search">
+                        <small class="text-muted d-block mb-2">Try searching for:</small>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary" onclick="setSearch('machine learning')">Machine Learning</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="setSearch('artificial intelligence')">AI</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="setSearch('climate change')">Climate Change</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="setSearch('neural networks')">Neural Networks</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="setSearch('quantum computing')">Quantum Computing</button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-search me-2"></i>Search Academic Papers
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 
     <!-- Features Section -->
-    <div class="container">
-        <h2 class="text-center mb-5">Complete Research Workflow</h2>
-        
+    <div class="container" id="features">
+        <h2 class="text-center mb-5">Powerful Research Features</h2>
         <div class="row g-4">
             <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
+                <div class="card feature-card">
                     <div class="card-body text-center p-4">
-                        <div class="feature-icon text-primary">
-                            <i class="bi bi-search-heart"></i>
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                            <i class="bi bi-search"></i>
                         </div>
-                        <h4 class="card-title">Smart Search</h4>
-                        <p class="card-text">
-                            Search across multiple academic databases simultaneously. 
-                            Get complete abstracts, full author lists, and comprehensive metadata.
-                        </p>
+                        <h4 class="card-title">Unified Search</h4>
+                        <p class="card-text">Search across multiple academic databases simultaneously including Google Scholar, arXiv, PubMed, and more.</p>
                     </div>
                 </div>
             </div>
-            
             <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
+                <div class="card feature-card">
                     <div class="card-body text-center p-4">
-                        <div class="feature-icon text-success">
-                            <i class="bi bi-clipboard-data"></i>
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                            <i class="bi bi-graph-up"></i>
                         </div>
                         <h4 class="card-title">Reliability Scoring</h4>
-                        <p class="card-text">
-                            Automatic scoring based on citations, journal quality, 
-                            publication date, and source credibility.
-                        </p>
+                        <p class="card-text">Automated quality assessment with reliability scores based on source credibility, citations, and recency.</p>
                     </div>
                 </div>
             </div>
-            
             <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
+                <div class="card feature-card">
                     <div class="card-body text-center p-4">
-                        <div class="feature-icon text-info">
-                            <i class="bi bi-journal-text"></i>
-                        </div>
-                        <h4 class="card-title">RRL Generation</h4>
-                        <p class="card-text">
-                            Automatically generate Review of Related Literature sections 
-                            formatted for academic papers with proper citations.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row g-4 mt-2">
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon text-warning">
-                            <i class="bi bi-quote"></i>
-                        </div>
-                        <h4 class="card-title">Citation Formats</h4>
-                        <p class="card-text">
-                            Multiple citation styles: APA, MLA, Chicago, Harvard, IEEE, Vancouver. 
-                            Ready for reference managers.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon text-danger">
-                            <i class="bi bi-file-earmark-arrow-down"></i>
-                        </div>
-                        <h4 class="card-title">Export Options</h4>
-                        <p class="card-text">
-                            Export to CSV, BibTeX, or plain text. Perfect for 
-                            literature reviews, reference managers, and research databases.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon text-secondary">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
                             <i class="bi bi-cpu"></i>
                         </div>
                         <h4 class="card-title">AI Synthesis</h4>
-                        <p class="card-text">
-                            Intelligent synthesis of multiple sources. Extract key points, 
-                            identify trends, and generate comprehensive summaries.
-                        </p>
+                        <p class="card-text">Generate summaries, literature reviews, and formatted citations from selected papers automatically.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
+                            <i class="bi bi-download"></i>
+                        </div>
+                        <h4 class="card-title">Multiple Export Formats</h4>
+                        <p class="card-text">Export results in CSV, BibTeX, JSON, and Markdown formats for easy integration with reference managers.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white;">
+                            <i class="bi bi-funnel"></i>
+                        </div>
+                        <h4 class="card-title">Smart Filtering</h4>
+                        <p class="card-text">Filter results by source, reliability score, publication year, and citation count for focused research.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #a3bded 0%, #6991c7 100%); color: white;">
+                            <i class="bi bi-speedometer2"></i>
+                        </div>
+                        <h4 class="card-title">Parallel Processing</h4>
+                        <p class="card-text">Fast parallel searches across all sources with caching for improved performance and reduced latency.</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- How to Use Section -->
+    <!-- Sources Section -->
+    <div class="container mt-5" id="sources">
+        <h2 class="text-center mb-5">Integrated Academic Sources</h2>
+        <div class="row g-3 mb-5">
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="source-badge bg-danger text-white">
+                    <i class="bi bi-google"></i> Google Scholar
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="source-badge bg-dark text-white">
+                    <i class="bi bi-journal"></i> arXiv
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="source-badge bg-primary text-white">
+                    <i class="bi bi-shield-check"></i> Semantic Scholar
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="source-badge bg-info text-white">
+                    <i class="bi bi-link"></i> Crossref
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="source-badge bg-success text-white">
+                    <i class="bi bi-file-medical"></i> PubMed
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="source-badge bg-warning text-dark">
+                    <i class="bi bi-globe"></i> Wikipedia
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="source-badge bg-secondary text-white">
+                    <i class="bi bi-door-open"></i> DOAJ
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="source-badge bg-purple text-white">
+                    <i class="bi bi-lightning"></i> IEEE
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="source-badge bg-green text-white">
+                    <i class="bi bi-book"></i> Springer
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Section -->
     <div class="container mt-5">
-        <div class="card shadow">
-            <div class="card-body p-5">
-                <h3 class="text-center mb-4">How to Use for Academic Research</h3>
-                
-                <div class="row">
-                    <div class="col-lg-6">
-                        <h5>For Literature Reviews (RRL):</h5>
-                        <ol>
-                            <li>Search your research topic</li>
-                            <li>Select relevant papers (high reliability scores)</li>
-                            <li>Click "Generate RRL" for formatted literature review</li>
-                            <li>Export citations for your reference manager</li>
-                            <li>Copy the generated RRL to your paper</li>
-                        </ol>
-                    </div>
-                    
-                    <div class="col-lg-6">
-                        <h5>For Research Papers:</h5>
-                        <ol>
-                            <li>Find papers with complete abstracts</li>
-                            <li>Check PDF availability for full text</li>
-                            <li>Use multiple citation formats</li>
-                            <li>Export to BibTeX for LaTeX papers</li>
-                            <li>Generate summaries for each section</li>
-                        </ol>
-                    </div>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stats-counter">
+                    <div class="number">10+</div>
+                    <p>Academic Sources</p>
                 </div>
-                
-                <div class="alert alert-info mt-4">
-                    <h6><i class="bi bi-lightbulb"></i> Research Tip:</h6>
-                    <p class="mb-0">
-                        Always verify information from original sources. This tool helps 
-                        with discovery and organization, but critical evaluation is essential.
-                    </p>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-counter">
+                    <div class="number">100M+</div>
+                    <p>Research Papers</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-counter">
+                    <div class="number">0.5s</div>
+                    <p>Average Search Time</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-counter">
+                    <div class="number">99%</div>
+                    <p>Reliability Accuracy</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer class="bg-light mt-5 py-4">
-        <div class="container text-center">
-            <p class="mb-0">
-                <i class="bi bi-journal-check"></i> Academic Research Hub &copy; 2024 | 
-                Designed for researchers, students, and academics
-            </p>
-            <small class="text-muted">
-                Searches: arXiv, Semantic Scholar, and academic databases
-            </small>
+    <!-- How It Works -->
+    <div class="container mt-5" id="about">
+        <h2 class="text-center mb-5">How It Works</h2>
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="mb-3" style="font-size: 3rem; color: #667eea;">
+                                1
+                            </div>
+                            <h5>Enter Your Query</h5>
+                            <p class="text-muted">Search using keywords, paper titles, or research topics. Use advanced filters for precise results.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="mb-3" style="font-size: 3rem; color: #764ba2;">
+                                2
+                            </div>
+                            <h5>Review Results</h5>
+                            <p class="text-muted">Browse through organized results with reliability scores, citations, and source information.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="mb-3" style="font-size: 3rem; color: #f5576c;">
+                                3
+                            </div>
+                            <h5>Synthesize & Export</h5>
+                            <p class="text-muted">Generate summaries, create literature reviews, and export in multiple formats for your research.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </footer>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Academic Research Hub</h5>
+                    <p class="text-muted">Your comprehensive platform for academic research discovery and analysis.</p>
+                    <div class="mt-3">
+                        <a href="#" class="text-decoration-none me-3">
+                            <i class="bi bi-github"></i> GitHub
+                        </a>
+                        <a href="#" class="text-decoration-none me-3">
+                            <i class="bi bi-twitter"></i> Twitter
+                        </a>
+                        <a href="#" class="text-decoration-none">
+                            <i class="bi bi-envelope"></i> Contact
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <h6>Features</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-decoration-none text-muted">Unified Search</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">Reliability Scoring</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">AI Synthesis</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">Export Tools</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6>Sources</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-decoration-none text-muted">Google Scholar</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">arXiv</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">Semantic Scholar</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">PubMed</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center text-muted">
+                <small>© 2024 Academic Research Hub. All rights reserved.</small>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function setSearch(query) {
+            document.querySelector('input[name="query"]').value = query;
+            document.getElementById('searchForm').submit();
+        }
+        
+        // Add keyboard shortcut for search
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                document.querySelector('input[name="query"]').focus();
+            }
+            
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                document.getElementById('searchForm').submit();
+            }
+        });
+        
+        // Animate search box on focus
+        document.querySelector('input[name="query"]').addEventListener('focus', function() {
+            this.parentElement.parentElement.classList.add('animated-search');
+        });
+        
+        document.querySelector('input[name="query"]').addEventListener('blur', function() {
+            this.parentElement.parentElement.classList.remove('animated-search');
+        });
+        
+        // Auto-select example text when clicking quick search buttons
+        document.querySelectorAll('.quick-search .btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const query = this.textContent;
+                const input = document.querySelector('input[name="query"]');
+                input.value = query;
+                input.focus();
+                input.select();
+            });
+        });
+        
+        // Show/hide advanced options
+        document.getElementById('includeGoogleScholar').addEventListener('change', function() {
+            if (!this.checked) {
+                alert('Note: Google Scholar provides comprehensive coverage including citation counts and PDF links.');
+            }
+        });
+    </script>
 </body>
 </html>
