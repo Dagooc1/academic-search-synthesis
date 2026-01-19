@@ -18,13 +18,14 @@ def search_arxiv(query, max_results=10):
     """Search arXiv for papers with full details"""
     results = []
     try:
+        client = arxiv.Client()
         search = arxiv.Search(
             query=query,
             max_results=max_results,
             sort_by=arxiv.SortCriterion.Relevance
         )
         
-        for paper in search.results():
+        for paper in client.results(search):
             # Get all authors
             authors = [author.name for author in paper.authors]
             
@@ -632,8 +633,7 @@ def not_found(e):
 def server_error(e):
     return render_template('error.html', error="Internal server error"), 500
 # Add to the end of your app.py file
+# Remove the required_packages line from here
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-  
-    required_packages = ['flask', 'flask_cors', 'requests', 'arxiv']
     app.run(host='0.0.0.0', port=port, debug=False)
