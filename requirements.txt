@@ -1,14 +1,27 @@
+# Core Flask app
 Flask==2.3.3
-requests==2.31.0
-beautifulsoup4==4.12.2
-nltk==3.8.1
-sumy==0.11.0
-arxiv==1.4.4  # Keep only ONE version - choose either 1.4.4 or 2.1.0
-scholarly==1.7.11
-google-api-python-client==2.100.0
-pandas==2.0.3
-scikit-learn==1.3.0
-python-dotenv==1.0.0
-lxml==4.9.3
 flask-cors==4.0.0
 gunicorn==21.2.0
+python-dotenv==1.0.0
+
+# HTTP requests
+requests==2.31.0
+
+# Web scraping
+beautifulsoup4==4.12.2
+lxml==4.9.3
+
+# Academic APIs
+arxiv==1.4.4  # OR arxiv==2.1.0 - choose ONE
+scholarly==1.7.11
+
+# Text processing
+nltk==3.8.1
+sumy==0.11.0
+
+# Data processing (optional - remove if not used)
+pandas==2.0.3
+scikit-learn==1.3.0
+
+# Google API (optional - remove if not used)
+google-api-python-client==2.100.0
