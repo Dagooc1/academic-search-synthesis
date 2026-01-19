@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 from flask_cors import CORS
 import os
 import requests
@@ -12,10 +12,17 @@ import wikipediaapi
 from bs4 import BeautifulSoup
 import time
 from urllib.parse import quote_plus
+import concurrent.futures
+from functools import wraps
+import hashlib
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins for now
+CORS(app, resources={r"/*": {"origins": "*"}})
 app.secret_key = os.getenv('SECRET_KEY', 'academic-search-secret-key-123')
+app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutes
+
+# Cache for search results (simple in-memory cache)
+search_cache = {}
 
 # Wikipedia API
 wiki_wiki = wikipediaapi.Wikipedia(
@@ -24,6 +31,31 @@ wiki_wiki = wikipediaapi.Wikipedia(
     user_agent='AcademicResearchHub/1.0'
 )
 
+def cache_search(func):
+    """Decorator to cache search results"""
+    @wraps(func)
+    def wrapper(query, max_results=10):
+        # Create cache key
+        cache_key = hashlib.md5(f"{func.__name__}_{query}_{max_results}".encode()).hexdigest()
+        
+        # Check cache
+        if cache_key in search_cache:
+            cached_time, results = search_cache[cache_key]
+            # Cache valid for 1 hour
+            if time.time() - cached_time < 3600:
+                print(f"Using cached results for {func.__name__}: {query}")
+                return results
+        
+        # Execute search
+        results = func(query, max_results)
+        
+        # Store in cache
+        search_cache[cache_key] = (time.time(), results)
+        
+        return results
+    return wrapper
+
+@cache_search
 def search_arxiv(query, max_results=10):
     """Search arXiv for papers with full details"""
     results = []
@@ -36,12 +68,16 @@ def search_arxiv(query, max_results=10):
         )
         
         for paper in client.results(search):
-            # Get all authors
             authors = [author.name for author in paper.authors]
             
             # Generate citation formats
-            citations = generate_citations(paper.title, authors, paper.published.year, 
-                                         paper.entry_id, paper.doi if hasattr(paper, 'doi') else '')
+            citations = generate_citations(
+                paper.title, 
+                authors, 
+                paper.published.year, 
+                paper.entry_id, 
+                paper.doi if hasattr(paper, 'doi') else ''
+            )
             
             results.append({
                 'source': 'arXiv',
@@ -57,13 +93,15 @@ def search_arxiv(query, max_results=10):
                 'reliability_level': 'Very High',
                 'citations_formatted': citations,
                 'journal': 'arXiv preprint',
-                'full_text_available': True
+                'full_text_available': True,
+                'search_timestamp': time.time()
             })
     except Exception as e:
         print(f"arXiv error: {e}")
     
     return results
 
+@cache_search
 def search_semantic_scholar(query, max_results=10):
     """Search Semantic Scholar with full details"""
     results = []
@@ -72,7 +110,7 @@ def search_semantic_scholar(query, max_results=10):
         params = {
             'query': query,
             'limit': max_results,
-            'fields': 'title,authors,abstract,year,citationCount,url,openAccessPdf,externalIds,venue,publicationVenue'
+            'fields': 'title,authors,abstract,year,citationCount,url,openAccessPdf,externalIds,venue,publicationVenue,tldr'
         }
         
         response = requests.get(url, params=params, timeout=30)
@@ -80,31 +118,39 @@ def search_semantic_scholar(query, max_results=10):
         if response.status_code == 200:
             data = response.json()
             for paper in data.get('data', []):
-                # Extract authors
                 authors = []
                 for author in paper.get('authors', []):
                     if isinstance(author, dict):
                         authors.append(author.get('name', ''))
                 
-                # Get DOI
                 doi = ''
                 if paper.get('externalIds') and isinstance(paper['externalIds'], dict):
                     doi = paper['externalIds'].get('DOI', '')
                 
-                # Get venue/journal
                 venue = paper.get('venue', '')
                 if not venue and paper.get('publicationVenue'):
                     venue = paper['publicationVenue'].get('name', '')
                 
-                # Generate citation formats
-                citations = generate_citations(paper.get('title', ''), authors, 
-                                             paper.get('year', ''), paper.get('url', ''), doi)
+                # Try to get TLDR (summary) if available
+                tldr = ''
+                if paper.get('tldr'):
+                    tldr_content = paper['tldr'].get('text', '')
+                    if tldr_content:
+                        tldr = tldr_content
+                
+                citations = generate_citations(
+                    paper.get('title', ''), 
+                    authors, 
+                    paper.get('year', ''), 
+                    paper.get('url', ''), 
+                    doi
+                )
                 
                 results.append({
                     'source': 'Semantic Scholar',
                     'title': paper.get('title', ''),
                     'authors': authors,
-                    'abstract': paper.get('abstract', ''),
+                    'abstract': paper.get('abstract', '') or tldr or 'Abstract not available',
                     'year': paper.get('year', ''),
                     'url': paper.get('url', ''),
                     'pdf_url': paper.get('openAccessPdf', {}).get('url', '') if paper.get('openAccessPdf') else '',
@@ -114,18 +160,19 @@ def search_semantic_scholar(query, max_results=10):
                     'reliability_level': 'High',
                     'citations_formatted': citations,
                     'journal': venue,
-                    'full_text_available': paper.get('openAccessPdf') is not None
+                    'full_text_available': paper.get('openAccessPdf') is not None,
+                    'search_timestamp': time.time()
                 })
     except Exception as e:
         print(f"Semantic Scholar error: {e}")
     
     return results
 
+@cache_search
 def search_wikipedia(query, max_results=5):
     """Search Wikipedia for articles"""
     results = []
     try:
-        # Search Wikipedia
         search_url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={quote_plus(query)}&format=json&srlimit={max_results}"
         response = requests.get(search_url, timeout=10)
         
@@ -136,11 +183,9 @@ def search_wikipedia(query, max_results=5):
                 title = item.get('title', '')
                 snippet = item.get('snippet', '')
                 
-                # Get full page details
                 page = wiki_wiki.page(title)
                 
                 if page.exists():
-                    # Clean HTML from snippet
                     soup = BeautifulSoup(snippet, 'html.parser')
                     clean_snippet = soup.get_text()
                     
@@ -149,150 +194,27 @@ def search_wikipedia(query, max_results=5):
                         'title': title,
                         'authors': ['Wikipedia Contributors'],
                         'abstract': clean_snippet + '...',
-                        'year': datetime.now().year,  # Wikipedia articles are current
+                        'year': datetime.now().year,
                         'url': f"https://en.wikipedia.org/wiki/{title.replace(' ', '_')}",
                         'pdf_url': '',
                         'doi': '',
                         'citations': 0,
-                        'reliability_score': 0.6,  # Good for general knowledge
+                        'reliability_score': 0.6,
                         'reliability_level': 'Good',
                         'citations_formatted': {
                             'APA': f"Wikipedia contributors. ({datetime.now().year}). {title}. In Wikipedia. Retrieved from https://en.wikipedia.org/wiki/{title.replace(' ', '_')}",
                             'MLA': f'"{title}." Wikipedia, Wikimedia Foundation, {datetime.now().year}, en.wikipedia.org/wiki/{title.replace(" ", "_")}.'
                         },
                         'journal': 'Wikipedia',
-                        'full_text_available': True
+                        'full_text_available': True,
+                        'search_timestamp': time.time()
                     })
     except Exception as e:
         print(f"Wikipedia error: {e}")
     
     return results
 
-def search_google_scholar(query, max_results=5):
-    """Search Google Scholar (simulated - actual API requires subscription)"""
-    results = []
-    try:
-        # Note: Google Scholar doesn't have a public API
-        # This is a simulated search using Semantic Scholar as alternative
-        return search_semantic_scholar(query, max_results)
-    except Exception as e:
-        print(f"Google Scholar error: {e}")
-    
-    return results
-
-def search_research_gate(query, max_results=5):
-    """Search ResearchGate for research papers"""
-    results = []
-    try:
-        # ResearchGate search simulation
-        search_url = f"https://www.researchgate.net/search/publication?q={quote_plus(query)}"
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-        
-        response = requests.get(search_url, headers=headers, timeout=15)
-        
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            # Find publication items (simplified parsing)
-            publications = soup.find_all('div', class_='nova-legacy-c-card__body', limit=max_results)
-            
-            for pub in publications:
-                try:
-                    title_elem = pub.find('a', class_='nova-legacy-e-link')
-                    if title_elem:
-                        title = title_elem.text.strip()
-                        url = "https://www.researchgate.net" + title_elem.get('href', '')
-                        
-                        # Try to extract abstract
-                        abstract_elem = pub.find('div', class_='nova-legacy-c-card__content')
-                        abstract = abstract_elem.text.strip()[:500] + '...' if abstract_elem else "Abstract not available"
-                        
-                        # Extract authors
-                        authors_elem = pub.find('ul', class_='nova-legacy-c-card__body')
-                        authors = []
-                        if authors_elem:
-                            author_items = authors_elem.find_all('li', class_='nova-legacy-c-card__item')
-                            authors = [item.text.strip() for item in author_items[:3]]
-                        
-                        results.append({
-                            'source': 'ResearchGate',
-                            'title': title,
-                            'authors': authors if authors else ['Various Researchers'],
-                            'abstract': abstract,
-                            'year': datetime.now().year,
-                            'url': url,
-                            'pdf_url': '',
-                            'doi': '',
-                            'citations': 0,
-                            'reliability_score': 0.6,
-                            'reliability_level': 'Good',
-                            'citations_formatted': generate_citations(title, authors, datetime.now().year, url, ''),
-                            'journal': 'ResearchGate',
-                            'full_text_available': False
-                        })
-                except Exception as e:
-                    print(f"Error parsing ResearchGate result: {e}")
-                    continue
-    except Exception as e:
-        print(f"ResearchGate error: {e}")
-    
-    return results
-
-def search_doaj(query, max_results=5):
-    """Search Directory of Open Access Journals"""
-    results = []
-    try:
-        url = f"https://doaj.org/api/v2/search/articles/{quote_plus(query)}?page=1&pageSize={max_results}"
-        response = requests.get(url, timeout=15)
-        
-        if response.status_code == 200:
-            data = response.json()
-            for article in data.get('results', []):
-                title = article.get('bibjson', {}).get('title', '')
-                if not title:
-                    continue
-                    
-                authors = []
-                for author in article.get('bibjson', {}).get('author', []):
-                    if isinstance(author, dict):
-                        name = author.get('name', '')
-                        if name:
-                            authors.append(name)
-                
-                abstract = article.get('bibjson', {}).get('abstract', '')
-                year = article.get('bibjson', {}).get('year', datetime.now().year)
-                doi = article.get('bibjson', {}).get('identifier', [{}])[0].get('id', '') if article.get('bibjson', {}).get('identifier') else ''
-                
-                # Find URL
-                url = ''
-                if doi:
-                    url = f"https://doi.org/{doi}"
-                elif article.get('bibjson', {}).get('link'):
-                    url = article['bibjson']['link'][0].get('url', '')
-                
-                results.append({
-                    'source': 'DOAJ',
-                    'title': title,
-                    'authors': authors if authors else ['Unknown Authors'],
-                    'abstract': abstract or 'Abstract not available',
-                    'year': year,
-                    'url': url,
-                    'pdf_url': '',
-                    'doi': doi,
-                    'citations': 0,
-                    'reliability_score': 0.7,
-                    'reliability_level': 'High',
-                    'citations_formatted': generate_citations(title, authors, year, url, doi),
-                    'journal': 'Open Access Journal',
-                    'full_text_available': True
-                })
-    except Exception as e:
-        print(f"DOAJ error: {e}")
-    
-    return results
-
+@cache_search
 def search_crossref(query, max_results=5):
     """Search Crossref for academic works"""
     results = []
@@ -321,7 +243,6 @@ def search_crossref(query, max_results=5):
                 doi = item.get('DOI', '')
                 url = f"https://doi.org/{doi}" if doi else item.get('URL', '')
                 
-                # Get journal name
                 journal = item.get('container-title', [''])[0]
                 
                 results.append({
@@ -338,91 +259,96 @@ def search_crossref(query, max_results=5):
                     'reliability_level': 'High',
                     'citations_formatted': generate_citations(title, authors, year, url, doi),
                     'journal': journal or 'Academic Publication',
-                    'full_text_available': bool(doi)
+                    'full_text_available': bool(doi),
+                    'search_timestamp': time.time()
                 })
     except Exception as e:
         print(f"Crossref error: {e}")
     
     return results
 
-def search_theses(query, max_results=5):
-    """Search for theses and dissertations"""
+@cache_search
+def search_doaj(query, max_results=5):
+    """Search Directory of Open Access Journals"""
     results = []
     try:
-        # Search ProQuest dissertations via their API
-        # This is a simplified version - in production you'd use proper API keys
-        base_url = "https://pqdtopen.proquest.com/search.html"
-        search_url = f"{base_url}?q={quote_plus(query)}"
+        url = f"https://doaj.org/api/v2/search/articles/{quote_plus(query)}?page=1&pageSize={max_results}"
+        response = requests.get(url, timeout=15)
         
-        results.append({
-            'source': 'Theses/Dissertations',
-            'title': f'Research on "{query}" - Theses and Dissertations',
-            'authors': ['Various Researchers'],
-            'abstract': f'Search for academic theses and dissertations related to {query}. Visit ProQuest or university repositories for detailed results.',
-            'year': datetime.now().year,
-            'url': search_url,
-            'pdf_url': '',
-            'doi': '',
-            'citations': 0,
-            'reliability_score': 0.6,
-            'reliability_level': 'Good',
-            'citations_formatted': {
-                'APA': f'Various Researchers. ({datetime.now().year}). Research on "{query}". In Academic Theses and Dissertations.',
-                'MLA': f'Research on "{query}". Academic Theses and Dissertations, {datetime.now().year}.'
-            },
-            'journal': 'University Theses',
-            'full_text_available': False,
-            'note': 'Visit university repositories or ProQuest for complete thesis collections'
-        })
+        if response.status_code == 200:
+            data = response.json()
+            for article in data.get('results', []):
+                title = article.get('bibjson', {}).get('title', '')
+                if not title:
+                    continue
+                    
+                authors = []
+                for author in article.get('bibjson', {}).get('author', []):
+                    if isinstance(author, dict):
+                        name = author.get('name', '')
+                        if name:
+                            authors.append(name)
+                
+                abstract = article.get('bibjson', {}).get('abstract', '')
+                year = article.get('bibjson', {}).get('year', datetime.now().year)
+                doi = article.get('bibjson', {}).get('identifier', [{}])[0].get('id', '') if article.get('bibjson', {}).get('identifier') else ''
+                
+                url = ''
+                if doi:
+                    url = f"https://doi.org/{doi}"
+                elif article.get('bibjson', {}).get('link'):
+                    url = article['bibjson']['link'][0].get('url', '')
+                
+                results.append({
+                    'source': 'DOAJ',
+                    'title': title,
+                    'authors': authors if authors else ['Unknown Authors'],
+                    'abstract': abstract or 'Abstract not available',
+                    'year': year,
+                    'url': url,
+                    'pdf_url': '',
+                    'doi': doi,
+                    'citations': 0,
+                    'reliability_score': 0.7,
+                    'reliability_level': 'High',
+                    'citations_formatted': generate_citations(title, authors, year, url, doi),
+                    'journal': 'Open Access Journal',
+                    'full_text_available': True,
+                    'search_timestamp': time.time()
+                })
     except Exception as e:
-        print(f"Theses search error: {e}")
+        print(f"DOAJ error: {e}")
     
     return results
 
-def search_research_institutions(query, max_results=3):
-    """Search research institutions and organizations"""
-    results = []
-    
-    # List of major research institutions
-    institutions = [
-        ('MIT', 'Massachusetts Institute of Technology', 'https://www.mit.edu'),
-        ('Stanford', 'Stanford University', 'https://www.stanford.edu'),
-        ('Harvard', 'Harvard University', 'https://www.harvard.edu'),
-        ('Oxford', 'University of Oxford', 'https://www.ox.ac.uk'),
-        ('Cambridge', 'University of Cambridge', 'https://www.cam.ac.uk'),
-        ('NIH', 'National Institutes of Health', 'https://www.nih.gov'),
-        ('NASA', 'National Aeronautics and Space Administration', 'https://www.nasa.gov'),
-        ('CERN', 'European Organization for Nuclear Research', 'https://home.cern'),
-        ('Max Planck', 'Max Planck Society', 'https://www.mpg.de'),
-        ('CNRS', 'French National Centre for Scientific Research', 'https://www.cnrs.fr')
+def search_parallel(query, max_results=15):
+    """Search all sources in parallel"""
+    search_functions = [
+        (search_arxiv, min(3, max_results//3)),
+        (search_semantic_scholar, min(3, max_results//3)),
+        (search_crossref, min(2, max_results//4)),
+        (search_doaj, min(2, max_results//4)),
+        (search_wikipedia, min(2, max_results//4))
     ]
     
-    query_lower = query.lower()
-    for short, full_name, url in institutions:
-        if query_lower in short.lower() or query_lower in full_name.lower():
-            results.append({
-                'source': 'Research Institution',
-                'title': f'{full_name} - Research on {query}',
-                'authors': [f'{full_name} Researchers'],
-                'abstract': f'{full_name} conducts cutting-edge research on {query} and related fields. Visit their website for publications, research projects, and academic resources.',
-                'year': datetime.now().year,
-                'url': url,
-                'pdf_url': '',
-                'doi': '',
-                'citations': 0,
-                'reliability_score': 0.9,
-                'reliability_level': 'Very High',
-                'citations_formatted': {
-                    'APA': f'{full_name}. ({datetime.now().year}). Research on {query}. Retrieved from {url}',
-                    'MLA': f'{full_name}. "Research on {query}." {datetime.now().year}, {url}.'
-                },
-                'journal': 'Institutional Research',
-                'full_text_available': True
-            })
-            if len(results) >= max_results:
-                break
+    all_results = []
     
-    return results
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(search_functions)) as executor:
+        future_to_func = {
+            executor.submit(func, query, count): func.__name__
+            for func, count in search_functions
+        }
+        
+        for future in concurrent.futures.as_completed(future_to_func):
+            func_name = future_to_func[future]
+            try:
+                results = future.result(timeout=30)
+                all_results.extend(results)
+                print(f"✓ {func_name}: Found {len(results)} results")
+            except Exception as e:
+                print(f"✗ {func_name} failed: {e}")
+    
+    return all_results
 
 def generate_citations(title, authors, year, url, doi=''):
     """Generate multiple citation formats"""
@@ -440,14 +366,14 @@ def generate_citations(title, authors, year, url, doi=''):
         apa_authors = f"{authors[0]} et al."
         mla_authors = f"{authors[0]}, et al."
     
-    # Get current year for accessed date
     current_year = datetime.now().year
+    current_date = datetime.now().strftime("%Y-%m-%d")
     
     citations = {
         'APA': f"{apa_authors} ({year}). {title}. Retrieved from {url}",
         'MLA': f'{mla_authors}. "{title}." {year}. Web. {current_year}.',
         'Chicago': f'{authors[0]} et al. "{title}." ({year}). {url}',
-        'Harvard': f'{authors[0]} et al. ({year}) {title}. Available at: {url} (Accessed: {datetime.now().strftime("%d %B %Y")})',
+        'Harvard': f'{authors[0]} et al. ({year}) {title}. Available at: {url} (Accessed: {current_date})',
         'IEEE': f'[{authors[0][0]}. {authors[0].split()[-1]} et al., "{title}," {year}.]',
         'Vancouver': f'{apa_authors}. {title}. [Internet]. {year}. Available from: {url}'
     }
@@ -455,10 +381,236 @@ def generate_citations(title, authors, year, url, doi=''):
     if doi:
         citations['APA'] = f"{apa_authors} ({year}). {title}. https://doi.org/{doi}"
         citations['MLA'] = f'{mla_authors}. "{title}." {year}. doi:{doi}.'
+        citations['Chicago'] = f'{authors[0]} et al. "{title}." ({year}). https://doi.org/{doi}'
     
     return citations
 
-# Rest of your functions remain the same (extract_key_points, generate_rrl_section, generate_summary)...
+def calculate_reliability_score(result):
+    """Calculate enhanced reliability score"""
+    score = result.get('reliability_score', 0.5)
+    
+    # Source adjustments
+    source = result.get('source', '')
+    if source in ['arXiv', 'Crossref', 'DOAJ']:
+        score = max(score, 0.7)
+    elif source == 'Semantic Scholar':
+        score = max(score, 0.75)
+    elif source == 'Wikipedia':
+        score = 0.65
+    elif source == 'Research Institution':
+        score = 0.9
+    
+    # Year adjustments
+    year = result.get('year')
+    if year and isinstance(year, int):
+        current_year = datetime.now().year
+        if current_year - year <= 1:
+            score += 0.15
+        elif current_year - year <= 3:
+            score += 0.1
+        elif current_year - year <= 5:
+            score += 0.05
+    
+    # Citation adjustments
+    citations = result.get('citations', 0)
+    if citations > 1000:
+        score += 0.25
+    elif citations > 100:
+        score += 0.15
+    elif citations > 10:
+        score += 0.05
+    
+    # Full text availability
+    if result.get('full_text_available'):
+        score += 0.05
+    
+    # DOI presence
+    if result.get('doi'):
+        score += 0.05
+    
+    # Normalize score
+    score = min(1.0, max(0.3, score))
+    
+    # Determine level
+    if score >= 0.85:
+        level = "Excellent"
+    elif score >= 0.75:
+        level = "Very High"
+    elif score >= 0.65:
+        level = "High"
+    elif score >= 0.55:
+        level = "Good"
+    elif score >= 0.45:
+        level = "Medium"
+    else:
+        level = "Low"
+    
+    return round(score, 2), level
+
+def extract_key_points(texts, query):
+    """Extract key points from text (simplified version)"""
+    if not texts:
+        return []
+    
+    all_text = ' '.join(texts)
+    
+    # Simple keyword extraction
+    words = re.findall(r'\b[a-zA-Z]{4,}\b', all_text.lower())
+    word_freq = {}
+    
+    for word in words:
+        if word not in ['this', 'that', 'these', 'those', 'with', 'from', 'have', 'were', 'they', 'which']:
+            word_freq[word] = word_freq.get(word, 0) + 1
+    
+    # Get top keywords
+    top_words = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)[:10]
+    
+    # Create key points
+    key_points = []
+    for word, freq in top_words:
+        if freq > 2:  # Only include words that appear multiple times
+            key_points.append(f"• '{word}' appears {freq} times in the literature")
+    
+    if query and key_points:
+        key_points.insert(0, f"• Primary research focus: {query}")
+    
+    if not key_points:
+        key_points = ["• No specific key points could be extracted"]
+    
+    return key_points[:5]  # Limit to 5 key points
+
+def generate_summary(results, query, key_points):
+    """Generate a summary from selected results"""
+    if not results:
+        return "No results available for summary generation."
+    
+    total_results = len(results)
+    
+    # Count by source
+    sources = {}
+    for result in results:
+        source = result.get('source', 'Unknown')
+        sources[source] = sources.get(source, 0) + 1
+    
+    source_summary = ', '.join([f"{count} from {source}" for source, count in sources.items()])
+    
+    # Get date range
+    years = [r.get('year') for r in results if isinstance(r.get('year'), int)]
+    year_range = ""
+    if years:
+        min_year = min(years)
+        max_year = max(years)
+        if min_year == max_year:
+            year_range = f"in {min_year}"
+        else:
+            year_range = f"from {min_year} to {max_year}"
+    
+    # Create summary
+    summary = f"""
+## Research Summary for "{query}"
+
+### Overview
+This summary is based on {total_results} academic sources {year_range}, including {source_summary}. 
+The research covers various aspects of "{query}" with reliability scores ranging from 
+{min(r.get('reliability_score', 0) for r in results):.2f} to {max(r.get('reliability_score', 0) for r in results):.2f}.
+
+### Key Findings
+{chr(10).join(key_points)}
+
+### Methodology
+The analysis includes peer-reviewed papers, conference proceedings, and authoritative sources. 
+Each source was evaluated based on publication venue, citation count, recency, and accessibility.
+
+### Recommendations
+1. Focus on sources with "Excellent" or "Very High" reliability scores for core research
+2. Consult recent publications (last 3 years) for current trends
+3. Use open-access sources for full-text availability
+
+### Limitations
+This summary is automatically generated and may not capture all nuances. 
+Manual review of primary sources is recommended for comprehensive understanding.
+"""
+    
+    return summary.strip()
+
+def generate_rrl_section(results, query):
+    """Generate Related Literature Review section"""
+    if not results:
+        return "No results available for RRL generation."
+    
+    # Group by year
+    results_by_year = {}
+    for result in results:
+        year = result.get('year', 'Unknown')
+        if year not in results_by_year:
+            results_by_year[year] = []
+        results_by_year[year].append(result)
+    
+    # Sort years
+    sorted_years = sorted([y for y in results_by_year.keys() if isinstance(y, int)], reverse=True)
+    
+    rrl_content = f"""
+## RELATED LITERATURE REVIEW: {query.upper()}
+
+### 1. Introduction
+This literature review synthesizes existing research on "{query}" from multiple academic sources. 
+The review covers {len(results)} publications spanning from {min(sorted_years) if sorted_years else 'various years'} to {max(sorted_years) if sorted_years else 'present'}.
+
+### 2. Theoretical Framework
+The literature on "{query}" can be categorized into several theoretical perspectives. 
+Key frameworks include:
+- Technical implementations and algorithms
+- Application domains and case studies
+- Methodological approaches
+- Future research directions
+
+### 3. Review of Related Literature
+"""
+    
+    # Add content by year
+    for year in sorted_years[:5]:  # Limit to 5 most recent years
+        year_results = results_by_year[year]
+        rrl_content += f"\n#### {year} - Recent Developments\n"
+        
+        for result in year_results[:3]:  # Limit to 3 results per year
+            title = result.get('title', 'Untitled')
+            authors = ', '.join(result.get('authors', ['Unknown']))[:100]
+            
+            rrl_content += f"""
+**{title}** ({result.get('source', 'Unknown')})
+*Authors:* {authors}
+*Summary:* {result.get('abstract', 'No abstract available')[:200]}...
+*Reliability:* {result.get('reliability_level', 'Unknown')} ({result.get('reliability_score', 0):.2f})
+
+"""
+    
+    # Add synthesis section
+    rrl_content += """
+### 4. Synthesis and Analysis
+
+The literature reveals several consistent themes:
+1. **Technical Evolution**: Steady advancement in methodologies and implementations
+2. **Application Diversity**: Wide range of practical applications across domains
+3. **Research Gaps**: Areas requiring further investigation
+4. **Methodological Trends**: Shifts in research approaches over time
+
+### 5. Research Gaps and Future Directions
+
+Based on the reviewed literature, the following areas warrant further investigation:
+- Integration of emerging technologies
+- Longitudinal studies and impact assessments
+- Cross-disciplinary applications
+- Standardization and benchmarking
+
+### 6. Conclusion
+
+This review provides a comprehensive overview of current research on "{query}". 
+The literature demonstrates robust academic interest with contributions from 
+various disciplines and methodological approaches. Future research should 
+address identified gaps while building on established foundations.
+"""
+    
+    return rrl_content.strip()
 
 @app.route('/')
 def index():
@@ -472,169 +624,120 @@ def search():
     if not query:
         return render_template('error.html', error="Please enter a search query")
     
-    print(f"Searching for: {query}")
+    print(f"🔍 Searching for: '{query}' (max results: {max_results})")
     
-    # Search ALL sources in parallel (simplified sequential for reliability)
-    all_results = []
+    # Clear cache for fresh search if needed
+    if request.form.get('clear_cache'):
+        search_cache.clear()
+        print("🗑️ Cache cleared")
     
-    # 1. Academic Databases (High Priority)
-    try:
-        arxiv_results = search_arxiv(query, min(3, max_results//3))
-        all_results.extend(arxiv_results)
-        print(f"Found {len(arxiv_results)} arXiv results")
-    except Exception as e:
-        print(f"arXiv search failed: {e}")
+    # Record search time
+    start_time = time.time()
     
     try:
-        semantic_results = search_semantic_scholar(query, min(3, max_results//3))
-        all_results.extend(semantic_results)
-        print(f"Found {len(semantic_results)} Semantic Scholar results")
+        # Search in parallel
+        all_results = search_parallel(query, max_results)
+        
+        # Remove duplicates by title
+        unique_results = []
+        seen_titles = set()
+        
+        for result in all_results:
+            title = result.get('title', '').lower().strip()
+            if title and title not in seen_titles and len(title) > 3:
+                seen_titles.add(title)
+                
+                # Calculate reliability score
+                score, level = calculate_reliability_score(result)
+                result['reliability_score'] = score
+                result['reliability_level'] = level
+                result['id'] = hashlib.md5(f"{title}_{result.get('year', '')}".encode()).hexdigest()[:8]
+                
+                unique_results.append(result)
+        
+        # Sort by reliability score (highest first)
+        unique_results.sort(key=lambda x: x['reliability_score'], reverse=True)
+        
+        # Limit to max_results
+        final_results = unique_results[:max_results]
+        
+        search_time = time.time() - start_time
+        
+        print(f"✅ Found {len(final_results)} unique results in {search_time:.2f} seconds")
+        
+        # Store in session for export
+        session['last_search_results'] = final_results
+        session['last_query'] = query
+        
+        return render_template('results.html', 
+                             results=final_results,
+                             query=query,
+                             search_time=search_time,
+                             total_found=len(final_results))
+        
     except Exception as e:
-        print(f"Semantic Scholar search failed: {e}")
-    
-    try:
-        crossref_results = search_crossref(query, min(2, max_results//4))
-        all_results.extend(crossref_results)
-        print(f"Found {len(crossref_results)} Crossref results")
-    except Exception as e:
-        print(f"Crossref search failed: {e}")
-    
-    try:
-        doaj_results = search_doaj(query, min(2, max_results//4))
-        all_results.extend(doaj_results)
-        print(f"Found {len(doaj_results)} DOAJ results")
-    except Exception as e:
-        print(f"DOAJ search failed: {e}")
-    
-    # 2. General Knowledge (Medium Priority)
-    try:
-        wiki_results = search_wikipedia(query, min(2, max_results//4))
-        all_results.extend(wiki_results)
-        print(f"Found {len(wiki_results)} Wikipedia results")
-    except Exception as e:
-        print(f"Wikipedia search failed: {e}")
-    
-    # 3. Research Platforms
-    try:
-        researchgate_results = search_research_gate(query, min(2, max_results//4))
-        all_results.extend(researchgate_results)
-        print(f"Found {len(researchgate_results)} ResearchGate results")
-    except Exception as e:
-        print(f"ResearchGate search failed: {e}")
-    
-    # 4. Theses and Institutions (Lower Priority)
-    try:
-        theses_results = search_theses(query, min(1, max_results//5))
-        all_results.extend(theses_results)
-        print(f"Found {len(theses_results)} Theses results")
-    except Exception as e:
-        print(f"Theses search failed: {e}")
-    
-    try:
-        institution_results = search_research_institutions(query, min(1, max_results//5))
-        all_results.extend(institution_results)
-        print(f"Found {len(institution_results)} Institution results")
-    except Exception as e:
-        print(f"Institution search failed: {e}")
-    
-    # Remove duplicates by title
-    unique_results = []
-    seen_titles = set()
-    
-    for result in all_results:
-        title = result.get('title', '').lower().strip()
-        if title and title not in seen_titles and len(title) > 3:
-            seen_titles.add(title)
-            
-            # Calculate or adjust reliability score
-            score = result.get('reliability_score', 0.5)
-            
-            # Adjust based on source
-            source = result.get('source', '')
-            if source in ['arXiv', 'Crossref', 'DOAJ']:
-                score = max(score, 0.7)
-            elif source == 'Wikipedia':
-                score = 0.6  # Good for general knowledge
-            elif source == 'Research Institution':
-                score = 0.9  # Very high for reputable institutions
-            
-            # Adjust based on year (recent = better)
-            year = result.get('year')
-            if year and isinstance(year, int):
-                current_year = datetime.now().year
-                if current_year - year <= 3:
-                    score += 0.1
-                elif current_year - year <= 10:
-                    score += 0.05
-            
-            # Adjust based on citations
-            citations = result.get('citations', 0)
-            if citations > 100:
-                score += 0.2
-            elif citations > 10:
-                score += 0.1
-            
-            score = min(1.0, max(0.3, score))  # Keep between 0.3 and 1.0
-            
-            # Determine level
-            if score >= 0.8:
-                level = "Very High"
-            elif score >= 0.7:
-                level = "High"
-            elif score >= 0.6:
-                level = "Good"
-            elif score >= 0.5:
-                level = "Medium"
-            else:
-                level = "Low"
-            
-            result['reliability_score'] = round(score, 2)
-            result['reliability_level'] = level
-            unique_results.append(result)
-    
-    # Sort by reliability score (highest first)
-    unique_results.sort(key=lambda x: x['reliability_score'], reverse=True)
-    
-    # Limit to max_results
-    final_results = unique_results[:max_results]
-    
-    print(f"Total unique results found: {len(final_results)}")
-    
-    return render_template('results.html', 
-                         results=final_results,
-                         query=query)
+        print(f"❌ Search error: {e}")
+        import traceback
+        traceback.print_exc()
+        return render_template('error.html', 
+                             error=f"Search failed: {str(e)}",
+                             query=query)
 
-# The rest of your routes (synthesize, export, etc.) remain the same...
+@app.route('/api/search', methods=['POST'])
+def api_search():
+    """API endpoint for search (for AJAX calls)"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '').strip()
+        max_results = data.get('max_results', 10)
+        
+        if not query:
+            return jsonify({'error': 'No query provided'}), 400
+        
+        all_results = search_parallel(query, max_results)
+        
+        # Process results
+        unique_results = []
+        seen_titles = set()
+        
+        for result in all_results:
+            title = result.get('title', '').lower().strip()
+            if title and title not in seen_titles:
+                seen_titles.add(title)
+                score, level = calculate_reliability_score(result)
+                result['reliability_score'] = score
+                result['reliability_level'] = level
+                result['id'] = hashlib.md5(f"{title}_{result.get('year', '')}".encode()).hexdigest()[:8]
+                unique_results.append(result)
+        
+        unique_results.sort(key=lambda x: x['reliability_score'], reverse=True)
+        final_results = unique_results[:max_results]
+        
+        return jsonify({
+            'success': True,
+            'query': query,
+            'results': final_results,
+            'count': len(final_results)
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/synthesize', methods=['POST'])
 def synthesize():
     try:
-        print("Synthesis endpoint called")
-        
-        # Parse JSON data
         data = request.get_json()
         if not data:
-            print("No data received")
             return jsonify({'error': 'No data received'}), 400
             
         selected_results = data.get('selected_results', [])
         query = data.get('query', '')
         synthesis_type = data.get('type', 'summary')
         
-        print(f"Synthesis type: {synthesis_type}, Query: {query}, Sources: {len(selected_results)}")
-        
         if not selected_results:
-            print("No results selected")
             return jsonify({'error': 'No results selected'}), 400
         
-        # Ensure selected_results is a list
-        if not isinstance(selected_results, list):
-            print("Invalid data format")
-            return jsonify({'error': 'Invalid data format'}), 400
-        
         if synthesis_type == 'rrl':
-            # Generate RRL section
-            print("Generating RRL...")
             rrl_content = generate_rrl_section(selected_results, query)
             
             return jsonify({
@@ -644,16 +747,14 @@ def synthesize():
             })
         
         elif synthesis_type == 'citations':
-            # Generate formatted citations
-            print("Generating citations...")
             all_citations = []
             for result in selected_results:
                 citations = result.get('citations_formatted', {})
                 if citations:
                     all_citations.append(f"=== {result.get('title', 'Unknown')} ===")
                     for style, citation in citations.items():
-                        all_citations.append(f"{style}: {citation}")
-                    all_citations.append("")  # Add empty line between entries
+                        all_citations.append(f"{style.upper()}: {citation}")
+                    all_citations.append("")
             
             if not all_citations:
                 all_citations = ["No citation formats available for selected sources."]
@@ -665,8 +766,6 @@ def synthesize():
             })
         
         else:  # Default summary
-            # Extract all text
-            print("Generating summary...")
             all_texts = []
             for result in selected_results:
                 title = result.get('title', '')
@@ -675,10 +774,7 @@ def synthesize():
                 if text.strip():
                     all_texts.append(text)
             
-            # Extract key points
             key_points = extract_key_points(all_texts, query) if all_texts else []
-            
-            # Generate summary
             summary = generate_summary(selected_results, query, key_points)
             
             return jsonify({
@@ -698,9 +794,6 @@ def synthesize():
 def export(export_type):
     """Export results in various formats"""
     try:
-        print(f"Export endpoint called for type: {export_type}")
-        
-        # Parse JSON data
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data received'}), 400
@@ -708,19 +801,19 @@ def export(export_type):
         results = data.get('results', [])
         query = data.get('query', 'Unnamed_Query')
         
-        print(f"Exporting {len(results)} results for query: {query}")
+        if not results:
+            # Try to get from session
+            results = session.get('last_search_results', [])
+            query = session.get('last_query', 'Unknown_Query')
         
         if not results:
             return jsonify({'error': 'No results to export'}), 400
         
         if export_type == 'bibtex':
-            # Generate BibTeX entries
-            print("Generating BibTeX...")
             bibtex_entries = []
-            for result in results:
-                # Create a safe entry ID
+            for i, result in enumerate(results):
                 title = result.get('title', 'Unknown')
-                entry_id = re.sub(r'[^a-zA-Z0-9]', '_', title[:50]).lower()
+                entry_id = re.sub(r'[^a-zA-Z0-9]', '_', title[:50]).lower() + f"_{i}"
                 
                 authors = result.get('authors', ['Unknown'])
                 authors_str = ' and '.join(authors)
@@ -733,8 +826,10 @@ def export(export_type):
                 bibtex = f"""@article{{{entry_id},
   title = {{{title}}},
   author = {{{authors_str}}},
-  year = {{{year}}},
-  journal = {{{journal}}},"""
+  year = {{{year}}},"""
+                
+                if journal:
+                    bibtex += f"\n  journal = {{{journal}}},"
                 
                 if doi:
                     bibtex += f"\n  doi = {{{doi}}},"
@@ -742,7 +837,7 @@ def export(export_type):
                 if url:
                     bibtex += f"\n  url = {{{url}}},"
                 
-                bibtex += "\n  note = {Retrieved from Academic Research Hub}"
+                bibtex += f"\n  note = {{Retrieved from Academic Research Hub, Reliability: {result.get('reliability_score', 0):.2f}}}"
                 bibtex += "\n}"
                 
                 bibtex_entries.append(bibtex)
@@ -752,30 +847,35 @@ def export(export_type):
             
             return jsonify({
                 'content': content,
-                'filename': filename
+                'filename': filename,
+                'count': len(results)
             })
         
         elif export_type == 'csv':
-            # Generate CSV
-            print("Generating CSV...")
             output = io.StringIO()
             writer = csv.writer(output)
             
             # Write header
-            writer.writerow(['Title', 'Authors', 'Year', 'Source', 'Citations', 'Reliability Score', 'DOI', 'URL', 'Abstract Preview'])
+            writer.writerow(['ID', 'Title', 'Authors', 'Year', 'Source', 'Journal', 
+                           'Citations', 'Reliability Score', 'Reliability Level', 
+                           'DOI', 'URL', 'PDF URL', 'Abstract'])
             
             # Write data
-            for result in results:
+            for i, result in enumerate(results):
                 writer.writerow([
+                    i + 1,
                     result.get('title', ''),
                     '; '.join(result.get('authors', [])),
                     result.get('year', ''),
                     result.get('source', ''),
+                    result.get('journal', ''),
                     result.get('citations', 0),
                     result.get('reliability_score', 0),
+                    result.get('reliability_level', ''),
                     result.get('doi', ''),
                     result.get('url', ''),
-                    (result.get('abstract', '')[:200] + '...') if result.get('abstract') and len(result.get('abstract', '')) > 200 else result.get('abstract', '')
+                    result.get('pdf_url', ''),
+                    result.get('abstract', '')[:500]
                 ])
             
             content = output.getvalue()
@@ -783,7 +883,24 @@ def export(export_type):
             
             return jsonify({
                 'content': content,
-                'filename': filename
+                'filename': filename,
+                'count': len(results)
+            })
+        
+        elif export_type == 'json':
+            content = json.dumps({
+                'query': query,
+                'timestamp': datetime.now().isoformat(),
+                'count': len(results),
+                'results': results
+            }, indent=2)
+            
+            filename = f"{re.sub(r'[^a-zA-Z0-9]', '_', query)[:50]}_results.json"
+            
+            return jsonify({
+                'content': content,
+                'filename': filename,
+                'count': len(results)
             })
         
         return jsonify({'error': 'Invalid export type'}), 400
@@ -794,20 +911,24 @@ def export(export_type):
         traceback.print_exc()
         return jsonify({'error': f'Export failed: {str(e)}'}), 500
 
+@app.route('/clear_cache', methods=['POST'])
+def clear_cache():
+    """Clear search cache"""
+    search_cache.clear()
+    return jsonify({'success': True, 'message': 'Cache cleared'})
+
+@app.route('/status')
+def status():
+    """Status endpoint"""
+    return jsonify({
+        'status': 'running',
+        'cache_size': len(search_cache),
+        'timestamp': datetime.now().isoformat()
+    })
+
 @app.route('/test')
 def test():
     return "✅ Flask is working! Academic Search ready."
-
-@app.route('/debug', methods=['POST'])
-def debug():
-    """Debug endpoint to check data"""
-    data = request.get_json()
-    return jsonify({
-        'received_data': str(data)[:500],
-        'data_type': type(data).__name__,
-        'keys': list(data.keys()) if isinstance(data, dict) else 'Not a dict'
-    })
-CORS(app, resources={r"/*": {"origins": ["https://your-project.up.railway.app", "http://localhost:5000"]}})
 
 @app.errorhandler(404)
 def not_found(e):
@@ -816,8 +937,7 @@ def not_found(e):
 @app.errorhandler(500)
 def server_error(e):
     return render_template('error.html', error="Internal server error"), 500
-# Add to the end of your app.py file
-# Remove the required_packages line from here
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=True)
