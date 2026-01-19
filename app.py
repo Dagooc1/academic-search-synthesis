@@ -622,9 +622,18 @@ def debug():
         'data_type': type(data).__name__,
         'keys': list(data.keys()) if isinstance(data, dict) else 'Not a dict'
     })
+CORS(app, resources={r"/*": {"origins": ["https://your-project.up.railway.app", "http://localhost:5000"]}})
 
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('error.html', error="Page not found"), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return render_template('error.html', error="Internal server error"), 500
+# Add to the end of your app.py file
 if __name__ == '__main__':
-    # Install required packages if needed
+    port = int(os.environ.get('PORT', 5000))
+  
     required_packages = ['flask', 'flask_cors', 'requests', 'arxiv']
-    
-    app.run(debug=True, port=5000, use_reloader=False, host='0.0.0.0')
+    app.run(host='0.0.0.0', port=port, debug=False)
