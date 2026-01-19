@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - Academic Search</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        .reliability-badge {
+            font-size: 0.8em;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+        .very-high { background-color: #28a745; color: white; }
+        .high { background-color: #20c997; color: white; }
+        .good { background-color: #ffc107; color: black; }
+        .medium { background-color: #fd7e14; color: white; }
+        .low { background-color: #dc3545; color: white; }
+        .result-card { transition: transform 0.2s; }
+        .result-card:hover { transform: translateY(-2px); }
+        .abstract-text {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+        .citation-box {
+            background-color: #e9ecef;
+            border-left: 4px solid #007bff;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .export-btn {
+            margin: 2px;
+        }
+        .fixed-alert {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-journal-richtext"></i> Academic Research Hub
+            </a>
+            <form class="d-flex" action="/search" method="POST">
+                <input class="form-control me-2" type="search" name="query" 
+                       placeholder="Search academic papers..." value="{{ query }}" required>
+                <input type="hidden" name="max_results" value="10">
+                <button class="btn btn-outline-primary" type="submit">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <!-- Fixed Alert for Synthesis Results -->
+    <div id="synthesisResult" class="alert alert-info d-none fixed-alert shadow-lg">
+        <!-- Content will be added here -->
+    </div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-lg-9">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2>Results for: "{{ query }}"</h2>
+                        <p class="text-muted">{{ results|length }} academic papers found</p>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-primary" onclick="exportResults('csv')">
+                            <i class="bi bi-download"></i> Export CSV
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="exportResults('bibtex')">
+                            <i class="bi bi-download"></i> Export BibTeX
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="resultsContainer">
+                    {% for result in results %}
+                    <div class="card mb-4 shadow-sm result-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center flex-grow-1">
+                                    <input type="checkbox" class="form-check-input me-3 result-checkbox" 
+                                           data-index="{{ loop.index0 }}" style="transform: scale(1.2);">
+                                    <div class="flex-grow-1">
+                                        <h4 class="card-title mb-1">{{ result.title }}</h4>
+                                        <div class="mb-2">
+                                            <small class="text-muted">
+                                                <i class="bi bi-person"></i> 
+                                                {% if result.authors %}
+                                                    {% set authors_string = result.authors|join(', ') %}
+                                                    {{ authors_string[:120] }}{% if authors_string|length > 120 %}...{% endif %}
+                                                {% else %}
+                                                    Unknown authors
+                                                {% endif %}
+                                                | <i class="bi bi-calendar"></i> {{ result.year }}
+                                                | <i class="bi bi-journal"></i> {{ result.source }}
+                                                {% if result.citations > 0 %}
+                                                | <i class="bi bi-quote"></i> {{ result.citations }} citations
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="reliability-badge {{ result.reliability_level|lower|replace(' ', '-') }} ms-2">
+                                    {{ result.reliability_level }}
+                                </span>
+                            </div>
+                            
+                            {% if result.journal %}
+                            <div class="mb-2">
+                                <span class="badge bg-info">{{ result.journal }}</span>
+                                {% if result.doi %}
+                                <span class="badge bg-secondary">DOI: {{ result.doi[:20] }}...</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mb-3">
+                                <h6>Abstract:</h6>
+                                <div class="abstract-text">
+                                    {{ result.abstract }}
+                                </div>
+                            </div>
+                            
+                            {% if result.citations_formatted and result.citations_formatted.APA %}
+                            <div class="mb-3">
+                                <h6>Citations:</h6>
+                                <div class="citation-box">
+                                    <strong>APA:</strong> {{ result.citations_formatted.APA[:150] }}...
+                                    <br><small class="text-muted">Click "View Citations" for full format</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if result.url %}
+                                    <a href="{{ result.url }}" target="_blank" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-link"></i> View Source
+                                    </a>
+                                    {% endif %}
+                                    {% if result.pdf_url %}
+                                    <a href="{{ result.pdf_url }}" target="_blank" class="btn btn-sm btn-success">
+                                        <i class="bi bi-file-pdf"></i> PDF
+                                    </a>
+                                    {% endif %}
+                                    <button class="btn btn-sm btn-outline-info" onclick="showCitations({{ loop.index0 }})">
+                                        <i class="bi bi-quote"></i> Citations
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="copyReference({{ loop.index0 }})">
+                                        <i class="bi bi-clipboard"></i> Copy Reference
+                                    </button>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">
+                                        Reliability: {{ result.reliability_score }}/1.0
+                                    </small>
+                                    {% if result.full_text_available %}
+                                    <span class="badge bg-success">Full Text Available</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="col-lg-3">
+                <div class="sticky-top" style="top: 20px;">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-cpu"></i> Synthesis Tools
+                            </h5>
+                            <p class="card-text">Select sources to generate research materials:</p>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="bi bi-check-circle"></i> Selected: 
+                                    <span id="selectedCount" class="badge bg-primary">0</span> sources
+                                </label>
+                                <div class="d-grid gap-2 mb-3">
+                                    <button class="btn btn-primary" onclick="synthesize('summary')">
+                                        <i class="bi bi-file-text"></i> Generate Summary
+                                    </button>
+                                    <button class="btn btn-success" onclick="synthesize('rrl')">
+                                        <i class="bi bi-journal-text"></i> Generate RRL
+                                    </button>
+                                    <button class="btn btn-info" onclick="synthesize('citations')">
+                                        <i class="bi bi-quote"></i> Format Citations
+                                    </button>
+                                </div>
+                                
+                                <div class="btn-group w-100 mb-3">
+                                    <button class="btn btn-outline-secondary" onclick="selectAll()">
+                                        <i class="bi bi-check-all"></i> Select All
+                                    </button>
+                                    <button class="btn btn-outline-secondary" onclick="deselectAll()">
+                                        <i class="bi bi-x-circle"></i> Deselect All
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <h6><i class="bi bi-download"></i> Export Options</h6>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-primary export-btn" onclick="exportResults('csv')">
+                                        <i class="bi bi-file-earmark-spreadsheet"></i> CSV
+                                    </button>
+                                    <button class="btn btn-outline-primary export-btn" onclick="exportResults('bibtex')">
+                                        <i class="bi bi-code-slash"></i> BibTeX
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h6><i class="bi bi-bar-chart"></i> Reliability Distribution</h6>
+                                {% set levels = {'Very High': 0, 'High': 0, 'Good': 0, 'Medium': 0, 'Low': 0} %}
+                                {% for result in results %}
+                                    {% set _ = levels.update({result.reliability_level: levels[result.reliability_level] + 1}) %}
+                                {% endfor %}
+                                
+                                {% for level, count in levels.items() if count > 0 %}
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span>{{ level }}</span>
+                                    <div>
+                                        <span class="badge bg-secondary me-2">{{ count }}</span>
+                                        <small class="text-muted">
+                                            {{ ((count / results|length) * 100)|round(1) }}%
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="progress mb-2" style="height: 8px;">
+                                    <div class="progress-bar {{ level|lower|replace(' ', '-') }}" 
+                                         style="width: {{ (count / results|length * 100)|round }}%"></div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h6><i class="bi bi-info-circle"></i> Research Tips</h6>
+                            <ul class="small">
+                                <li>Select papers with high reliability scores</li>
+                                <li>Use "Generate RRL" for literature reviews</li>
+                                <li>Export citations for reference managers</li>
+                                <li>Check PDF availability for full text</li>
+                                <li>Consider citation count for impact</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Citations Modal -->
+    <div class="modal fade" id="citationsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Citation Formats</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="citationsModalBody">
+                    <!-- Citations will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="copyAllCitations()">
+                        <i class="bi bi-clipboard"></i> Copy All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Store results in a safe variable
+        const searchResults = {{ results|tojson|safe }};
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSelectedCount();
+        });
+        
+        // Update selected count
+        function updateSelectedCount() {
+            const selected = document.querySelectorAll('.result-checkbox:checked');
+            document.getElementById('selectedCount').textContent = selected.length;
+        }
+        
+        // Select all checkboxes
+        function selectAll() {
+            document.querySelectorAll('.result-checkbox').forEach(cb => cb.checked = true);
+            updateSelectedCount();
+        }
+        
+        // Deselect all checkboxes
+        function deselectAll() {
+            document.querySelectorAll('.result-checkbox').forEach(cb => cb.checked = false);
+            updateSelectedCount();
+        }
+        
+        // Show citations for a specific paper
+        function showCitations(index) {
+            const result = searchResults[index];
+            let citationsHTML = `<h6>${result.title || 'No title'}</h6>`;
+            
+            if (result.citations_formatted && typeof result.citations_formatted === 'object') {
+                for (const [style, citation] of Object.entries(result.citations_formatted)) {
+                    if (citation) {
+                        citationsHTML += `
+                            <div class="mb-3">
+                                <strong>${style}:</strong>
+                                <div class="citation-box mt-1">
+                                    ${citation}
+                                    <button class="btn btn-sm btn-outline-secondary mt-2" 
+                                            onclick="copyToClipboard('${citation.replace(/'/g, "\\'")}')">
+                                        <i class="bi bi-clipboard"></i> Copy
+                                    </button>
+                                </div>
+                            </div>`;
+                    }
+                }
+            } else {
+                citationsHTML += '<p>No citation formats available.</p>';
+            }
+            
+            document.getElementById('citationsModalBody').innerHTML = citationsHTML;
+            new bootstrap.Modal(document.getElementById('citationsModal')).show();
+        }
+        
+        // Copy reference
+        function copyReference(index) {
+            const result = searchResults[index];
+            const reference = `${result.title || 'No title'} - ${(result.authors || ['Unknown']).join(', ')} (${result.year || 'Unknown'})`;
+            copyToClipboard(reference);
+        }
+        
+        // Copy text to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard. Please try again.');
+            });
+        }
+        
+        // Copy all citations from modal
+        function copyAllCitations() {
+            const citationDivs = document.querySelectorAll('#citationsModalBody .citation-box');
+            let allText = '';
+            citationDivs.forEach(div => {
+                const text = div.textContent.replace('Copy', '').trim();
+                allText += text + '\n\n';
+            });
+            copyToClipboard(allText);
+        }
+        
+     
+        // Export results
+ // Synthesize selected results - FIXED VERSION
+function synthesize(type) {
+    const selected = document.querySelectorAll('.result-checkbox:checked');
+    if (selected.length === 0) {
+        alert('Please select at least one source to synthesize.');
+        return;
+    }
+    
+    const selectedIndices = Array.from(selected).map(cb => parseInt(cb.dataset.index));
+    const selectedResults = selectedIndices.map(idx => searchResults[idx]);
+    
+    console.log('Selected results for synthesis:', selectedResults);
+    
+    // Show loading
+    const resultDiv = document.getElementById('synthesisResult');
+    resultDiv.className = 'alert alert-info d-block';
+    resultDiv.innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            <span>Generating ${type.toUpperCase()}... This may take a moment.</span>
+        </div>`;
+    
+    // Call API - FIXED URL
+    fetch('/synthesize', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            selected_results: selectedResults,
+            query: "{{ query }}",
+            type: type
+        })
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Synthesis response:', data);
+        
+        if (data.error) {
+            resultDiv.className = 'alert alert-danger d-block';
+            resultDiv.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Error: ${data.error}`;
+        } else {
+            resultDiv.className = 'alert alert-success d-block';
+            
+            let content = '';
+            let title = '';
+            
+            if (type === 'rrl') {
+                title = 'RRL Generated';
+                content = data.content || 'No content generated';
+            } else if (type === 'citations') {
+                title = 'Citations Generated';
+                content = data.content || 'No citations generated';
+            } else {
+                title = 'Summary Generated';
+                content = data.summary || 'No summary generated';
+            }
+            
+            // Escape single quotes for JavaScript
+            const escapedContent = content.replace(/'/g, "\\'").replace(/\n/g, '\\n');
+            
+            resultDiv.innerHTML = `
+                <button type="button" class="btn-close float-end" onclick="this.parentElement.classList.add('d-none')"></button>
+                <h5><i class="bi bi-check-circle"></i> ${title}</h5>
+                <p><strong>Sources analyzed:</strong> ${data.sources_count || 0}</p>
+                <div class="mt-3">
+                    <div class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto;">
+                        ${content.replace(/\n/g, '<br>')}
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-primary btn-sm" onclick="copyToClipboard('${escapedContent}')">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                        <button class="btn btn-secondary btn-sm ms-2" onclick="this.parentElement.parentElement.parentElement.classList.add('d-none')">
+                            Close
+                        </button>
+                    </div>
+                </div>`;
+        }
+    })
+    .catch(error => {
+        console.error('Synthesis error:', error);
+        resultDiv.className = 'alert alert-danger d-block';
+        resultDiv.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Error: ${error.message}. Check if Flask server is running on port 5000.`;
+    });
+}
+
+// Export results - FIXED VERSION
+function exportResults(format) {
+    const query = "{{ query }}";
+    
+    console.log('Exporting in format:', format);
+    
+    // Call API - FIXED URL
+    fetch('/export/' + format, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            results: searchResults,
+            query: query
+        })
+    })
+    .then(response => {
+        console.log('Export response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Export response:', data);
+        
+        if (data.error) {
+            alert('Export error: ' + data.error);
+        } else {
+            // Create download link
+            const blob = new Blob([data.content], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = data.filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            alert(`${format.toUpperCase()} export completed! File: ${data.filename}`);
+        }
+    })
+    .catch(error => {
+        console.error('Export error:', error);
+        alert('Export failed: ' + error.message + '. Check if Flask server is running on port 5000.');
+    });
+}
+        document.querySelectorAll('.result-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateSelectedCount);
+        });
+    </script>
+</body>
+</html>
