@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Academic Research Hub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
@@ -12,11 +12,58 @@
             --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
         
+        * {
+            box-sizing: border-box;
+        }
+        
+        html {
+            font-size: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            html {
+                font-size: 13px;
+            }
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
         .hero-section {
             background: var(--primary-gradient);
             color: white;
-            padding: 100px 0;
-            margin-bottom: 50px;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 2rem 0;
+            }
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.1)" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.1;
         }
         
         .feature-card {
@@ -25,6 +72,7 @@
             transition: all 0.3s ease;
             height: 100%;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
         }
         
         .feature-card:hover {
@@ -39,8 +87,16 @@
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            margin: 0 auto 20px;
+            margin: 0 auto 1.25rem;
             font-size: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .feature-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 25px;
+            }
         }
         
         .search-box {
@@ -48,37 +104,66 @@
             margin: 0 auto;
             background: rgba(255,255,255,0.95);
             border-radius: 20px;
-            padding: 40px;
+            padding: 2rem;
             box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        @media (max-width: 768px) {
+            .search-box {
+                padding: 1.5rem;
+                margin: 0 1rem;
+                border-radius: 15px;
+            }
         }
         
         .source-badge {
             display: inline-flex;
             align-items: center;
-            padding: 8px 15px;
-            margin: 5px;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
             border-radius: 50px;
-            font-size: 0.9em;
+            font-size: 0.85rem;
             font-weight: 500;
+            white-space: nowrap;
         }
         
-        .source-badge i {
-            margin-right: 8px;
+        @media (max-width: 768px) {
+            .source-badge {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
         }
         
         .stats-counter {
             text-align: center;
-            padding: 30px;
+            padding: 2rem;
             border-radius: 15px;
-            margin-bottom: 30px;
+            margin-bottom: 2rem;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .stats-counter {
+                padding: 1.5rem;
+                margin-bottom: 1rem;
+            }
         }
         
         .stats-counter .number {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: bold;
             background: var(--secondary-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-counter .number {
+                font-size: 2rem;
+            }
         }
         
         .animated-search {
@@ -91,387 +176,634 @@
             100% { transform: scale(1); }
         }
         
-        .toggle-switch {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 20px 0;
-        }
-        
-        .toggle-label {
-            margin: 0 15px;
-            font-weight: 500;
-        }
-        
-        .form-check-input:checked {
-            background-color: #667eea;
-            border-color: #667eea;
-        }
-        
         .footer {
             background: #f8f9fa;
-            padding: 40px 0;
-            margin-top: 80px;
+            padding: 3rem 0;
+            margin-top: 4rem;
+        }
+        
+        @media (max-width: 768px) {
+            .footer {
+                padding: 2rem 0;
+                margin-top: 3rem;
+            }
         }
         
         .quick-search {
-            margin: 30px 0;
+            margin: 1.5rem 0;
         }
         
         .quick-search .btn {
-            margin: 5px;
+            margin: 0.25rem;
             border-radius: 25px;
-            padding: 8px 20px;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .quick-search .btn {
+                padding: 0.4rem 1rem;
+                font-size: 0.85rem;
+                margin: 0.2rem;
+            }
+        }
+        
+        /* Mobile Navigation */
+        .navbar-toggler {
+            border: none;
+            padding: 0.5rem;
+        }
+        
+        .navbar-toggler:focus {
+            box-shadow: none;
+            outline: none;
+        }
+        
+        /* Improved form controls for mobile */
+        .form-control, .form-select {
+            font-size: 1rem;
+            padding: 0.75rem 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .form-control, .form-select {
+                font-size: 0.9rem;
+                padding: 0.65rem 0.9rem;
+            }
+        }
+        
+        /* Touch-friendly buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            min-height: 44px; /* Minimum touch target size */
+        }
+        
+        @media (max-width: 768px) {
+            .btn {
+                padding: 0.65rem 1.25rem;
+                font-size: 0.9rem;
+                min-height: 40px;
+            }
+        }
+        
+        /* Better spacing for mobile */
+        .mb-mobile-3 {
+            margin-bottom: 1rem !important;
+        }
+        
+        @media (max-width: 768px) {
+            .mb-mobile-3 {
+                margin-bottom: 0.75rem !important;
+            }
+        }
+        
+        /* Hide/show elements based on screen size */
+        .desktop-only {
+            display: block;
+        }
+        
+        .mobile-only {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .desktop-only {
+                display: none;
+            }
+            
+            .mobile-only {
+                display: block;
+            }
+        }
+        
+        /* Improved text readability */
+        h1, h2, h3, h4, h5, h6 {
+            line-height: 1.3;
+        }
+        
+        /* Loading spinner */
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .loading-spinner.active {
+            display: flex;
+        }
+        
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 9998;
+        }
+        
+        /* Better scrollbars for mobile */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Prevent text selection on buttons */
+        .btn, .source-badge {
+            user-select: none;
+            -webkit-user-select: none;
         }
     </style>
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
         <div class="container">
             <a class="navbar-brand fw-bold text-primary" href="/">
                 <i class="bi bi-journal-richtext me-2"></i>Academic Research Hub
             </a>
-            <div class="navbar-nav">
-                <a class="nav-link" href="#features">Features</a>
-                <a class="nav-link" href="#sources">Sources</a>
-                <a class="nav-link" href="#about">About</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="#features">Features</a>
+                    <a class="nav-link" href="#sources">Sources</a>
+                    <a class="nav-link" href="#about">About</a>
+                    <a class="nav-link" href="#contact">Contact</a>
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <div class="hero-section">
-        <div class="container text-center">
-            <h1 class="display-4 fw-bold mb-4">Search Millions of Academic Papers</h1>
-            <p class="lead mb-5">One platform to discover, analyze, and synthesize research from top academic sources worldwide</p>
-            
-            <!-- Search Box -->
-            <div class="search-box animated-search">
-                <form action="/search" method="POST" id="searchForm">
-                    <div class="input-group input-group-lg mb-4">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="bi bi-search text-primary"></i>
-                        </span>
-                        <input type="text" 
-                               class="form-control border-start-0 ps-0" 
-                               name="query" 
-                               placeholder="Enter research topic, keywords, or paper title..." 
-                               required
-                               autofocus>
-                    </div>
-                    
-                    <!-- Advanced Options -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label">Number of Results</label>
-                            <select class="form-select" name="max_results">
-                                <option value="10">10 results</option>
-                                <option value="20" selected>20 results</option>
-                                <option value="30">30 results</option>
-                                <option value="50">50 results</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Search Options</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="include_google_scholar" id="includeGoogleScholar" checked>
-                                <label class="form-check-label" for="includeGoogleScholar">
-                                    Include Google Scholar
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="clear_cache" id="clearCache">
-                                <label class="form-check-label" for="clearCache">
-                                    Clear cache (fresh search)
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Quick Search Suggestions -->
-                    <div class="quick-search">
-                        <small class="text-muted d-block mb-2">Try searching for:</small>
-                        <div>
-                            <button type="button" class="btn btn-outline-primary" onclick="setSearch('machine learning')">Machine Learning</button>
-                            <button type="button" class="btn btn-outline-primary" onclick="setSearch('artificial intelligence')">AI</button>
-                            <button type="button" class="btn btn-outline-primary" onclick="setSearch('climate change')">Climate Change</button>
-                            <button type="button" class="btn btn-outline-primary" onclick="setSearch('neural networks')">Neural Networks</button>
-                            <button type="button" class="btn btn-outline-primary" onclick="setSearch('quantum computing')">Quantum Computing</button>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary btn-lg w-100">
-                        <i class="bi bi-search me-2"></i>Search Academic Papers
-                    </button>
-                </form>
-            </div>
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="text-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+            <p class="mt-3">Searching academic databases...</p>
         </div>
     </div>
 
-    <!-- Features Section -->
-    <div class="container" id="features">
-        <h2 class="text-center mb-5">Powerful Research Features</h2>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card feature-card">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
-                            <i class="bi bi-search"></i>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Main Content (with padding for fixed navbar) -->
+    <div style="padding-top: 80px;">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="container text-center">
+                <h1 class="display-5 fw-bold mb-4">Search Millions of Academic Papers</h1>
+                <p class="lead mb-5">One platform to discover, analyze, and synthesize research from top academic sources worldwide</p>
+                
+                <!-- Search Box -->
+                <div class="search-box animated-search">
+                    <form action="/search" method="POST" id="searchForm" onsubmit="showLoading()">
+                        <div class="input-group input-group-lg mb-4">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-primary"></i>
+                            </span>
+                            <input type="text" 
+                                   class="form-control border-start-0 ps-0" 
+                                   name="query" 
+                                   placeholder="Enter research topic, keywords, or paper title..." 
+                                   required
+                                   autofocus
+                                   value="{{ search_query if search_query else '' }}"
+                                   id="searchInput">
                         </div>
-                        <h4 class="card-title">Unified Search</h4>
-                        <p class="card-text">Search across multiple academic databases simultaneously including Google Scholar, arXiv, PubMed, and more.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card feature-card">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
-                            <i class="bi bi-graph-up"></i>
+                        
+                        <!-- Advanced Options -->
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-mobile-3">
+                                <label class="form-label">Number of Results</label>
+                                <select class="form-select" name="max_results">
+                                    <option value="10">10 results</option>
+                                    <option value="20" selected>20 results</option>
+                                    <option value="30">30 results</option>
+                                    <option value="50">50 results</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Search Options</label>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="include_google_scholar" id="includeGoogleScholar" checked>
+                                    <label class="form-check-label" for="includeGoogleScholar">
+                                        Include Google Scholar
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="clear_cache" id="clearCache">
+                                    <label class="form-check-label" for="clearCache">
+                                        Clear cache (fresh search)
+                                    </label>
+                                </div>
+                            </div>
                         </div>
-                        <h4 class="card-title">Reliability Scoring</h4>
-                        <p class="card-text">Automated quality assessment with reliability scores based on source credibility, citations, and recency.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card feature-card">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
-                            <i class="bi bi-cpu"></i>
+                        
+                        <!-- Quick Search Suggestions -->
+                        <div class="quick-search">
+                            <small class="text-muted d-block mb-2">Try searching for:</small>
+                            <div class="d-flex flex-wrap justify-content-center">
+                                <button type="button" class="btn btn-outline-primary mb-2" onclick="setSearch('machine learning')">Machine Learning</button>
+                                <button type="button" class="btn btn-outline-primary mb-2" onclick="setSearch('artificial intelligence')">AI</button>
+                                <button type="button" class="btn btn-outline-primary mb-2" onclick="setSearch('climate change')">Climate Change</button>
+                                <button type="button" class="btn btn-outline-primary mb-2" onclick="setSearch('neural networks')">Neural Networks</button>
+                                <button type="button" class="btn btn-outline-primary mb-2 mobile-only" onclick="setSearch('quantum computing')">Quantum</button>
+                                <button type="button" class="btn btn-outline-primary mb-2 desktop-only" onclick="setSearch('quantum computing')">Quantum Computing</button>
+                            </div>
                         </div>
-                        <h4 class="card-title">AI Synthesis</h4>
-                        <p class="card-text">Generate summaries, literature reviews, and formatted citations from selected papers automatically.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card feature-card">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
-                            <i class="bi bi-download"></i>
-                        </div>
-                        <h4 class="card-title">Multiple Export Formats</h4>
-                        <p class="card-text">Export results in CSV, BibTeX, JSON, and Markdown formats for easy integration with reference managers.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card feature-card">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white;">
-                            <i class="bi bi-funnel"></i>
-                        </div>
-                        <h4 class="card-title">Smart Filtering</h4>
-                        <p class="card-text">Filter results by source, reliability score, publication year, and citation count for focused research.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card feature-card">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon" style="background: linear-gradient(135deg, #a3bded 0%, #6991c7 100%); color: white;">
-                            <i class="bi bi-speedometer2"></i>
-                        </div>
-                        <h4 class="card-title">Parallel Processing</h4>
-                        <p class="card-text">Fast parallel searches across all sources with caching for improved performance and reduced latency.</p>
-                    </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-search me-2"></i>Search Academic Papers
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Sources Section -->
-    <div class="container mt-5" id="sources">
-        <h2 class="text-center mb-5">Integrated Academic Sources</h2>
-        <div class="row g-3 mb-5">
-            <div class="col-6 col-md-4 col-lg-2">
-                <div class="source-badge bg-danger text-white">
-                    <i class="bi bi-google"></i> Google Scholar
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <div class="source-badge bg-dark text-white">
-                    <i class="bi bi-journal"></i> arXiv
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <div class="source-badge bg-primary text-white">
-                    <i class="bi bi-shield-check"></i> Semantic Scholar
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <div class="source-badge bg-info text-white">
-                    <i class="bi bi-link"></i> Crossref
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <div class="source-badge bg-success text-white">
-                    <i class="bi bi-file-medical"></i> PubMed
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <div class="source-badge bg-warning text-dark">
-                    <i class="bi bi-globe"></i> Wikipedia
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <div class="source-badge bg-secondary text-white">
-                    <i class="bi bi-door-open"></i> DOAJ
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <div class="source-badge bg-purple text-white">
-                    <i class="bi bi-lightning"></i> IEEE
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <div class="source-badge bg-green text-white">
-                    <i class="bi bi-book"></i> Springer
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats Section -->
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-md-3">
-                <div class="stats-counter">
-                    <div class="number">10+</div>
-                    <p>Academic Sources</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stats-counter">
-                    <div class="number">100M+</div>
-                    <p>Research Papers</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stats-counter">
-                    <div class="number">0.5s</div>
-                    <p>Average Search Time</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stats-counter">
-                    <div class="number">99%</div>
-                    <p>Reliability Accuracy</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- How It Works -->
-    <div class="container mt-5" id="about">
-        <h2 class="text-center mb-5">How It Works</h2>
-        <div class="row">
-            <div class="col-lg-10 mx-auto">
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <div class="mb-3" style="font-size: 3rem; color: #667eea;">
-                                1
+        <!-- Features Section -->
+        <div class="container" id="features">
+            <h2 class="text-center mb-5">Powerful Research Features</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card feature-card">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                                <i class="bi bi-search"></i>
                             </div>
-                            <h5>Enter Your Query</h5>
-                            <p class="text-muted">Search using keywords, paper titles, or research topics. Use advanced filters for precise results.</p>
+                            <h4 class="card-title">Unified Search</h4>
+                            <p class="card-text">Search across multiple academic databases simultaneously including Google Scholar, arXiv, PubMed, and more.</p>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <div class="mb-3" style="font-size: 3rem; color: #764ba2;">
-                                2
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                                <i class="bi bi-graph-up"></i>
                             </div>
-                            <h5>Review Results</h5>
-                            <p class="text-muted">Browse through organized results with reliability scores, citations, and source information.</p>
+                            <h4 class="card-title">Reliability Scoring</h4>
+                            <p class="card-text">Automated quality assessment with reliability scores based on source credibility, citations, and recency.</p>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <div class="mb-3" style="font-size: 3rem; color: #f5576c;">
-                                3
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+                                <i class="bi bi-cpu"></i>
                             </div>
-                            <h5>Synthesize & Export</h5>
-                            <p class="text-muted">Generate summaries, create literature reviews, and export in multiple formats for your research.</p>
+                            <h4 class="card-title">AI Synthesis</h4>
+                            <p class="card-text">Generate summaries, literature reviews, and formatted citations from selected papers automatically.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
+                                <i class="bi bi-download"></i>
+                            </div>
+                            <h4 class="card-title">Multiple Export Formats</h4>
+                            <p class="card-text">Export results in CSV, BibTeX, JSON, and Markdown formats for easy integration with reference managers.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white;">
+                                <i class="bi bi-funnel"></i>
+                            </div>
+                            <h4 class="card-title">Smart Filtering</h4>
+                            <p class="card-text">Filter results by source, reliability score, publication year, and citation count for focused research.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon" style="background: linear-gradient(135deg, #a3bded 0%, #6991c7 100%); color: white;">
+                                <i class="bi bi-speedometer2"></i>
+                            </div>
+                            <h4 class="card-title">Parallel Processing</h4>
+                            <p class="card-text">Fast parallel searches across all sources with caching for improved performance and reduced latency.</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Footer -->
-    <div class="footer">
-        <div class="container">
+        <!-- Sources Section -->
+        <div class="container mt-5" id="sources">
+            <h2 class="text-center mb-5">Integrated Academic Sources</h2>
+            <div class="row g-2 mb-5 justify-content-center">
+                <div class="col-6 col-md-3 col-lg-2">
+                    <div class="source-badge bg-danger text-white">
+                        <i class="bi bi-google"></i> Google Scholar
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <div class="source-badge bg-dark text-white">
+                        <i class="bi bi-journal"></i> arXiv
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <div class="source-badge bg-primary text-white">
+                        <i class="bi bi-shield-check"></i> Semantic Scholar
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <div class="source-badge bg-info text-white">
+                        <i class="bi bi-link"></i> Crossref
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <div class="source-badge bg-success text-white">
+                        <i class="bi bi-file-medical"></i> PubMed
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <div class="source-badge bg-warning text-dark">
+                        <i class="bi bi-globe"></i> Wikipedia
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <div class="source-badge bg-secondary text-white">
+                        <i class="bi bi-door-open"></i> DOAJ
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <div class="source-badge bg-purple text-white">
+                        <i class="bi bi-lightning"></i> IEEE
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <div class="source-badge bg-green text-white">
+                        <i class="bi bi-book"></i> Springer
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="container mt-5">
             <div class="row">
-                <div class="col-md-6">
-                    <h5>Academic Research Hub</h5>
-                    <p class="text-muted">Your comprehensive platform for academic research discovery and analysis.</p>
-                    <div class="mt-3">
-                        <a href="#" class="text-decoration-none me-3">
-                            <i class="bi bi-github"></i> GitHub
-                        </a>
-                        <a href="#" class="text-decoration-none me-3">
-                            <i class="bi bi-twitter"></i> Twitter
-                        </a>
-                        <a href="#" class="text-decoration-none">
-                            <i class="bi bi-envelope"></i> Contact
-                        </a>
+                <div class="col-md-3 col-6">
+                    <div class="stats-counter">
+                        <div class="number">10+</div>
+                        <p>Academic Sources</p>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <h6>Features</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-decoration-none text-muted">Unified Search</a></li>
-                        <li><a href="#" class="text-decoration-none text-muted">Reliability Scoring</a></li>
-                        <li><a href="#" class="text-decoration-none text-muted">AI Synthesis</a></li>
-                        <li><a href="#" class="text-decoration-none text-muted">Export Tools</a></li>
-                    </ul>
+                <div class="col-md-3 col-6">
+                    <div class="stats-counter">
+                        <div class="number">100M+</div>
+                        <p>Research Papers</p>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <h6>Sources</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-decoration-none text-muted">Google Scholar</a></li>
-                        <li><a href="#" class="text-decoration-none text-muted">arXiv</a></li>
-                        <li><a href="#" class="text-decoration-none text-muted">Semantic Scholar</a></li>
-                        <li><a href="#" class="text-decoration-none text-muted">PubMed</a></li>
-                    </ul>
+                <div class="col-md-3 col-6">
+                    <div class="stats-counter">
+                        <div class="number">0.5s</div>
+                        <p>Avg Search Time</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stats-counter">
+                        <div class="number">99%</div>
+                        <p>Reliability</p>
+                    </div>
                 </div>
             </div>
-            <hr>
-            <div class="text-center text-muted">
-                <small>© 2024 Academic Research Hub. All rights reserved.</small>
+        </div>
+
+        <!-- How It Works -->
+        <div class="container mt-5" id="about">
+            <h2 class="text-center mb-5">How It Works</h2>
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="mb-3" style="font-size: 2.5rem; color: #667eea;">
+                                    1
+                                </div>
+                                <h5>Enter Your Query</h5>
+                                <p class="text-muted">Search using keywords, paper titles, or research topics. Use advanced filters for precise results.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="mb-3" style="font-size: 2.5rem; color: #764ba2;">
+                                    2
+                                </div>
+                                <h5>Review Results</h5>
+                                <p class="text-muted">Browse through organized results with reliability scores, citations, and source information.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="mb-3" style="font-size: 2.5rem; color: #f5576c;">
+                                    3
+                                </div>
+                                <h5>Synthesize & Export</h5>
+                                <p class="text-muted">Generate summaries, create literature reviews, and export in multiple formats for your research.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="container mt-5" id="contact">
+            <div class="row">
+                <div class="col-md-8 mx-auto">
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center p-5">
+                            <h3 class="mb-4">Start Your Research Journey</h3>
+                            <p class="text-muted mb-4">Join thousands of researchers who use Academic Research Hub to accelerate their work.</p>
+                            <a href="#top" class="btn btn-primary btn-lg">
+                                <i class="bi bi-search me-2"></i>Start Searching Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <h5>Academic Research Hub</h5>
+                        <p class="text-muted">Your comprehensive platform for academic research discovery and analysis.</p>
+                        <div class="mt-3">
+                            <a href="#" class="text-decoration-none me-3">
+                                <i class="bi bi-github"></i> GitHub
+                            </a>
+                            <a href="#" class="text-decoration-none me-3">
+                                <i class="bi bi-twitter"></i> Twitter
+                            </a>
+                            <a href="#" class="text-decoration-none">
+                                <i class="bi bi-envelope"></i> Contact
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <h6>Features</h6>
+                        <ul class="list-unstyled">
+                            <li><a href="#features" class="text-decoration-none text-muted">Unified Search</a></li>
+                            <li><a href="#features" class="text-decoration-none text-muted">Reliability Scoring</a></li>
+                            <li><a href="#features" class="text-decoration-none text-muted">AI Synthesis</a></li>
+                            <li><a href="#features" class="text-decoration-none text-muted">Export Tools</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <h6>Sources</h6>
+                        <ul class="list-unstyled">
+                            <li><a href="#sources" class="text-decoration-none text-muted">Google Scholar</a></li>
+                            <li><a href="#sources" class="text-decoration-none text-muted">arXiv</a></li>
+                            <li><a href="#sources" class="text-decoration-none text-muted">Semantic Scholar</a></li>
+                            <li><a href="#sources" class="text-decoration-none text-muted">PubMed</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <hr>
+                <div class="text-center text-muted">
+                    <small>© 2024 Academic Research Hub. All rights reserved.</small>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="btn btn-primary rounded-circle shadow-lg" style="position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; display: none;">
+        <i class="bi bi-arrow-up"></i>
+    </button>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Initialize with any search query from URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchQuery = urlParams.get('q') || '{{ search_query if search_query else "" }}';
+            if (searchQuery) {
+                document.getElementById('searchInput').value = searchQuery;
+            }
+            
+            // Show back to top button on scroll
+            window.addEventListener('scroll', function() {
+                const backToTopBtn = document.getElementById('backToTop');
+                if (window.scrollY > 300) {
+                    backToTopBtn.style.display = 'block';
+                } else {
+                    backToTopBtn.style.display = 'none';
+                }
+            });
+            
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+        
         function setSearch(query) {
-            document.querySelector('input[name="query"]').value = query;
-            document.getElementById('searchForm').submit();
+            document.getElementById('searchInput').value = query;
+            document.getElementById('searchInput').focus();
+            document.getElementById('searchInput').select();
+        }
+        
+        function showLoading() {
+            document.getElementById('loadingSpinner').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingSpinner').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toastId = 'toast-' + Date.now();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast.id = toastId;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" onclick="removeToast('${toastId}')"></button>
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+            bsToast.show();
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                removeToast(toastId);
+            }, 5000);
+        }
+        
+        function removeToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.remove();
+            }
         }
         
         // Add keyboard shortcut for search
         document.addEventListener('keydown', function(e) {
-            if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+            // Focus search input when / is pressed
+            if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
                 e.preventDefault();
-                document.querySelector('input[name="query"]').focus();
+                document.getElementById('searchInput').focus();
             }
             
+            // Submit search form with Ctrl/Cmd + Enter
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                document.getElementById('searchForm').submit();
+                if (document.getElementById('searchInput').value.trim()) {
+                    document.getElementById('searchForm').submit();
+                }
             }
         });
         
         // Animate search box on focus
-        document.querySelector('input[name="query"]').addEventListener('focus', function() {
+        document.getElementById('searchInput').addEventListener('focus', function() {
             this.parentElement.parentElement.classList.add('animated-search');
         });
         
-        document.querySelector('input[name="query"]').addEventListener('blur', function() {
+        document.getElementById('searchInput').addEventListener('blur', function() {
             this.parentElement.parentElement.classList.remove('animated-search');
         });
         
@@ -479,19 +811,66 @@
         document.querySelectorAll('.quick-search .btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const query = this.textContent;
-                const input = document.querySelector('input[name="query"]');
-                input.value = query;
-                input.focus();
-                input.select();
+                setSearch(query);
             });
         });
         
         // Show/hide advanced options
         document.getElementById('includeGoogleScholar').addEventListener('change', function() {
             if (!this.checked) {
-                alert('Note: Google Scholar provides comprehensive coverage including citation counts and PDF links.');
+                showToast('Note: Google Scholar provides comprehensive coverage including citation counts and PDF links.', 'warning');
             }
         });
+        
+        // Back to top functionality
+        document.getElementById('backToTop').addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Handle offline/online status
+        window.addEventListener('online', function() {
+            showToast('You are back online!', 'success');
+        });
+        
+        window.addEventListener('offline', function() {
+            showToast('You are offline. Some features may not work.', 'warning');
+        });
+        
+        // Prevent form resubmission on refresh
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+        
+        // Detect mobile device
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+        
+        // Adjust UI for mobile
+        if (isMobile()) {
+            // Add mobile-specific optimizations
+            document.body.classList.add('mobile-device');
+        }
     </script>
 </body>
 </html>

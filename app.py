@@ -32,6 +32,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 app.secret_key = os.getenv('SECRET_KEY', 'academic-search-secret-key-123')
 app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutes
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 # Cache for search results (simple in-memory cache)
 search_cache = {}
@@ -49,9 +50,6 @@ wiki_wiki = wikipediaapi.Wikipedia(
 # Scholar proxies (you can add your own proxy list)
 SCHOLAR_PROXIES = [
     None,  # Try without proxy first
-    # Add your proxies here if needed:
-    # {'http': 'http://proxy1:port', 'https': 'https://proxy1:port'},
-    # {'http': 'http://proxy2:port', 'https': 'https://proxy2:port'},
 ]
 
 def cache_search(func):
@@ -204,7 +202,7 @@ def search_google_scholar(query, max_results=10):
                                 'pdf_url': pdf_link or '',
                                 'doi': '',
                                 'citations': citations,
-                                'reliability_score': 0.9,  # Google Scholar is highly reliable
+                                'reliability_score': 0.9,
                                 'reliability_level': 'Excellent',
                                 'citations_formatted': citations_formatted,
                                 'journal': journal,
@@ -1152,12 +1150,21 @@ insights for researchers, practitioners, and policymakers interested in this dom
     
     return rrl_content.strip()
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
 
-@app.route('/search', methods=['POST'])
+@app.route('/search', methods=['GET', 'POST'])
 def search():
+    if request.method == 'GET':
+        query = request.args.get('query', '').strip()
+        if not query:
+            return render_template('index.html')
+        
+        # For GET requests, redirect to POST with same parameters
+        return render_template('index.html', search_query=query)
+    
+    # POST request handling
     query = request.form.get('query', '').strip()
     max_results = int(request.form.get('max_results', 20))
     include_google_scholar = request.form.get('include_google_scholar', 'true').lower() == 'true'
@@ -1525,7 +1532,7 @@ def clear_cache():
     search_cache.clear()
     return jsonify({'success': True, 'message': 'Cache cleared', 'cache_size': len(search_cache)})
 
-@app.route('/status')
+@app.route('/status', methods=['GET'])
 def status():
     """Status endpoint"""
     source_count = {}
@@ -1541,18 +1548,38 @@ def status():
         'version': '2.0.0'
     })
 
-@app.route('/test')
+@app.route('/test', methods=['GET'])
 def test():
     return "✅ Flask is working! Academic Search v2.0 with Google Scholar integration."
+
+# Add route for quick search from URL
+@app.route('/search/<query>', methods=['GET'])
+def quick_search(query):
+    """Quick search from URL"""
+    if not query or query.strip() == '':
+        return render_template('index.html')
+    
+    # Store query for the search form
+    return render_template('index.html', search_query=query)
 
 @app.errorhandler(404)
 def not_found(e):
     return render_template('error.html', error="Page not found"), 404
 
+@app.errorhandler(405)
+def method_not_allowed(e):
+    logger.warning(f"Method not allowed: {request.method} for {request.path}")
+    return render_template('error.html', error=f"Method {request.method} not allowed for this URL"), 405
+
 @app.errorhandler(500)
 def server_error(e):
     logger.error(f"Server error: {e}", exc_info=True)
     return render_template('error.html', error="Internal server error"), 500
+
+# Add route for static files (for development)
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('static', filename)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

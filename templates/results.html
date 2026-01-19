@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Results - Academic Research Hub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
@@ -16,14 +16,49 @@
             --low: #dc3545;
         }
         
+        * {
+            box-sizing: border-box;
+        }
+        
+        html {
+            font-size: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            html {
+                font-size: 13px;
+            }
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            padding-top: 80px; /* For fixed navbar */
+        }
+        
         .reliability-badge {
-            font-size: 0.8em;
-            padding: 4px 10px;
+            font-size: 0.75rem;
+            padding: 3px 8px;
             border-radius: 20px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            white-space: nowrap;
         }
+        
+        @media (max-width: 768px) {
+            .reliability-badge {
+                font-size: 0.7rem;
+                padding: 2px 6px;
+            }
+        }
+        
         .excellent { background-color: var(--excellent); color: white; }
         .very-high { background-color: var(--very-high); color: white; }
         .high { background-color: var(--high); color: white; }
@@ -34,11 +69,20 @@
         .result-card { 
             transition: all 0.3s ease;
             border-left: 4px solid transparent;
+            margin-bottom: 1.5rem;
         }
+        
+        @media (max-width: 768px) {
+            .result-card {
+                margin-bottom: 1rem;
+            }
+        }
+        
         .result-card:hover { 
             transform: translateY(-4px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
+        
         .result-card.selected {
             border-left-color: var(--bs-primary);
             background-color: #f8f9fa;
@@ -54,6 +98,14 @@
             line-height: 1.6;
         }
         
+        @media (max-width: 768px) {
+            .abstract-text {
+                max-height: 150px;
+                padding: 10px;
+                font-size: 0.9em;
+            }
+        }
+        
         .citation-box {
             background: linear-gradient(to right, #e9ecef, #f8f9fa);
             border-left: 4px solid #007bff;
@@ -64,23 +116,34 @@
             border-radius: 0 8px 8px 0;
         }
         
-        .export-btn {
-            transition: all 0.2s;
-        }
-        .export-btn:hover {
-            transform: scale(1.05);
+        @media (max-width: 768px) {
+            .citation-box {
+                padding: 10px;
+                font-size: 0.85em;
+            }
         }
         
         .fixed-alert {
             position: fixed;
-            top: 80px;
+            top: 90px;
             right: 20px;
             z-index: 1000;
             max-width: 500px;
+            width: 90%;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             border: none;
             border-radius: 10px;
             animation: slideIn 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .fixed-alert {
+                top: 80px;
+                right: 10px;
+                left: 10px;
+                width: auto;
+                max-width: none;
+            }
         }
         
         @keyframes slideIn {
@@ -102,17 +165,27 @@
             margin-bottom: 20px;
         }
         
+        @media (max-width: 768px) {
+            .search-stats {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+        }
+        
         .filter-tags .badge {
             cursor: pointer;
             transition: all 0.2s;
-        }
-        .filter-tags .badge:hover {
-            transform: scale(1.1);
+            margin: 0.25rem;
+            font-size: 0.85rem;
+            padding: 0.4rem 0.8rem;
         }
         
-        .progress-bar-custom {
-            height: 10px;
-            border-radius: 5px;
+        @media (max-width: 768px) {
+            .filter-tags .badge {
+                font-size: 0.8rem;
+                padding: 0.3rem 0.6rem;
+                margin: 0.2rem;
+            }
         }
         
         .source-icon {
@@ -125,72 +198,251 @@
             margin-right: 8px;
             font-size: 12px;
         }
+        
+        @media (max-width: 768px) {
+            .source-icon {
+                width: 20px;
+                height: 20px;
+                font-size: 10px;
+                margin-right: 6px;
+            }
+        }
+        
         .arxiv-icon { background-color: #b31b1b; color: white; }
         .semantic-icon { background-color: #1856b3; color: white; }
         .wiki-icon { background-color: #636466; color: white; }
         .crossref-icon { background-color: #8a2be2; color: white; }
+        .google-icon { background-color: #4285f4; color: white; }
+        .pubmed-icon { background-color: #0066cc; color: white; }
+        .doaj-icon { background-color: #6c757d; color: white; }
+        .ieee-icon { background-color: #ff9900; color: white; }
+        .springer-icon { background-color: #007b33; color: white; }
         
         .action-buttons .btn {
             margin: 2px;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        @media (max-width: 768px) {
+            .action-buttons .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+                margin: 1px;
+            }
         }
         
         .sticky-sidebar {
             position: sticky;
-            top: 20px;
+            top: 90px;
             height: fit-content;
-            max-height: calc(100vh - 40px);
+            max-height: calc(100vh - 100px);
             overflow-y: auto;
         }
         
+        @media (max-width: 992px) {
+            .sticky-sidebar {
+                position: static;
+                max-height: none;
+                margin-top: 2rem;
+            }
+        }
+        
         .empty-state {
-            padding: 60px 20px;
+            padding: 3rem 1rem;
             text-align: center;
             color: #6c757d;
         }
+        
         .empty-state i {
             font-size: 4rem;
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
             opacity: 0.5;
+        }
+        
+        @media (max-width: 768px) {
+            .empty-state i {
+                font-size: 3rem;
+                margin-bottom: 1rem;
+            }
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .card-title {
+                font-size: 1.1rem;
+            }
+            
+            .card-body {
+                padding: 1rem;
+            }
+            
+            .btn-group {
+                flex-wrap: wrap;
+            }
+            
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+            
+            .modal-content {
+                border-radius: 0.5rem;
+            }
+        }
+        
+        /* Touch-friendly elements */
+        .result-checkbox {
+            min-width: 20px;
+            min-height: 20px;
+        }
+        
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 9998;
+        }
+        
+        /* Better scroll for mobile */
+        .abstract-text::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        /* Responsive table for stats */
+        .stats-table {
+            width: 100%;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-table {
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* Hide/show elements for mobile */
+        .desktop-only {
+            display: block;
+        }
+        
+        .mobile-only {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .desktop-only {
+                display: none;
+            }
+            
+            .mobile-only {
+                display: block;
+            }
+        }
+        
+        /* Mobile menu for filters */
+        .mobile-filters {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 1rem;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-filters.active {
+                display: block;
+            }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
         <div class="container">
             <a class="navbar-brand fw-bold text-primary" href="/">
                 <i class="bi bi-journal-richtext me-2"></i>Academic Research Hub
             </a>
-            
-            <div class="d-flex align-items-center">
-                <form class="d-flex me-3" action="/search" method="POST" id="searchForm">
-                    <div class="input-group">
-                        <input class="form-control" type="search" name="query" 
-                               placeholder="Search academic papers..." value="{{ query }}" required
-                               id="searchInput">
-                        <input type="hidden" name="max_results" value="15">
-                        <button class="btn btn-primary" type="submit">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </div>
-                </form>
-                <button class="btn btn-outline-secondary" onclick="clearSearch()">
-                    <i class="bi bi-arrow-clockwise"></i>
-                </button>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="d-flex align-items-center w-100">
+                    <form class="d-flex flex-grow-1 me-3" action="/search" method="POST" id="searchForm">
+                        <div class="input-group">
+                            <input class="form-control" type="search" name="query" 
+                                   placeholder="Search..." value="{{ query }}" required
+                                   id="searchInput">
+                            <input type="hidden" name="max_results" value="15">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <button class="btn btn-outline-secondary mobile-only" onclick="showMobileFilters()">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay d-none">
+        <div class="text-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+            <p class="mt-3">Processing...</p>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
     <!-- Fixed Alert for Synthesis Results -->
     <div id="synthesisResult" class="alert alert-info d-none fixed-alert shadow-lg">
         <!-- Content will be added here -->
     </div>
 
-    <div class="container-fluid mt-4 px-lg-5">
+    <!-- Mobile Filters -->
+    <div class="mobile-filters" id="mobileFilters">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Filters</h6>
+            <button class="btn-close" onclick="hideMobileFilters()"></button>
+        </div>
+        <div class="filter-tags">
+            <span class="badge bg-primary me-2" onclick="filterBySource('all')">All</span>
+            <span class="badge bg-secondary me-2" onclick="filterBySource('Google Scholar')">Google</span>
+            <span class="badge bg-secondary me-2" onclick="filterBySource('arXiv')">arXiv</span>
+            <span class="badge bg-success me-2" onclick="filterByReliability('Excellent')">Excellent</span>
+            <span class="badge bg-info me-2" onclick="filterByReliability('Very High')">Very High</span>
+        </div>
+    </div>
+
+    <div class="container-fluid mt-4 px-lg-3 px-md-2">
         <!-- Search Statistics -->
         <div class="search-stats mb-4">
             <div class="row align-items-center">
                 <div class="col-md-8">
-                    <h3 class="mb-2">Results for: "{{ query }}"</h3>
+                    <h4 class="mb-2">Results for: "{{ query }}"</h4>
                     <p class="mb-0">
                         <i class="bi bi-file-earmark-text"></i> {{ total_found or results|length }} papers found
                         {% if search_time %}
@@ -201,22 +453,26 @@
                 <div class="col-md-4 text-end">
                     <div class="btn-group">
                         <button class="btn btn-light" onclick="exportResults('csv')">
-                            <i class="bi bi-file-earmark-spreadsheet"></i> CSV
+                            <i class="bi bi-file-earmark-spreadsheet"></i>
+                            <span class="desktop-only"> CSV</span>
                         </button>
                         <button class="btn btn-light" onclick="exportResults('bibtex')">
-                            <i class="bi bi-code-slash"></i> BibTeX
+                            <i class="bi bi-code-slash"></i>
+                            <span class="desktop-only"> BibTeX</span>
                         </button>
                         <button class="btn btn-light" onclick="exportResults('json')">
-                            <i class="bi bi-filetype-json"></i> JSON
+                            <i class="bi bi-filetype-json"></i>
+                            <span class="desktop-only"> JSON</span>
                         </button>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Filter Tags -->
-        <div class="filter-tags mb-4">
+        <!-- Filter Tags (Desktop) -->
+        <div class="filter-tags mb-4 desktop-only">
             <span class="badge bg-primary me-2" onclick="filterBySource('all')">All Sources</span>
+            <span class="badge bg-secondary me-2" onclick="filterBySource('Google Scholar')">Google Scholar</span>
             <span class="badge bg-secondary me-2" onclick="filterBySource('arXiv')">arXiv</span>
             <span class="badge bg-secondary me-2" onclick="filterBySource('Semantic Scholar')">Semantic Scholar</span>
             <span class="badge bg-secondary me-2" onclick="filterBySource('Wikipedia')">Wikipedia</span>
@@ -233,7 +489,7 @@
                 {% if results %}
                 <div id="resultsContainer">
                     {% for result in results %}
-                    <div class="card mb-4 shadow-sm result-card" 
+                    <div class="card shadow-sm result-card" 
                          data-source="{{ result.source }}"
                          data-reliability="{{ result.reliability_level }}"
                          data-year="{{ result.year }}"
@@ -245,11 +501,11 @@
                                     <input type="checkbox" 
                                            class="form-check-input me-3 result-checkbox" 
                                            data-index="{{ loop.index0 }}" 
-                                           style="transform: scale(1.3);"
+                                           style="transform: scale(1.2);"
                                            onchange="toggleResultSelection({{ loop.index0 }}, this.checked)">
                                     <div class="flex-grow-1">
                                         <h5 class="card-title mb-2">
-                                            <span class="source-icon {{ result.source.lower().replace(' ', '-') }}-icon">
+                                            <span class="source-icon {{ result.source.lower().replace(' ', '-').replace('.', '') }}-icon">
                                                 {{ result.source[0] }}
                                             </span>
                                             {{ result.title }}
@@ -259,20 +515,21 @@
                                                 <i class="bi bi-person"></i> 
                                                 {% if result.authors %}
                                                     {% set authors_string = result.authors|join(', ') %}
-                                                    {{ authors_string[:150] }}{% if authors_string|length > 150 %}...{% endif %}
+                                                    <span class="authors-truncate">{{ authors_string[:100] }}{% if authors_string|length > 100 %}...{% endif %}</span>
                                                 {% else %}
                                                     Unknown authors
                                                 {% endif %}
                                                 | <i class="bi bi-calendar"></i> {{ result.year }}
                                                 {% if result.citations > 0 %}
-                                                | <i class="bi bi-quote"></i> {{ result.citations }} citations
+                                                | <i class="bi bi-quote"></i> {{ result.citations }}
                                                 {% endif %}
                                             </small>
                                         </div>
                                     </div>
                                 </div>
                                 <span class="reliability-badge {{ result.reliability_level|lower|replace(' ', '-') }} ms-2">
-                                    {{ result.reliability_level }}
+                                    <span class="desktop-only">{{ result.reliability_level }}</span>
+                                    <span class="mobile-only">{{ result.reliability_level[0] }}</span>
                                     <small class="d-block text-center">{{ "%.2f"|format(result.reliability_score) }}</small>
                                 </span>
                             </div>
@@ -280,22 +537,22 @@
                             <!-- Tags -->
                             <div class="mb-3">
                                 {% if result.journal %}
-                                <span class="badge bg-info me-2">{{ result.journal }}</span>
+                                <span class="badge bg-info me-2 mb-1">{{ result.journal[:30] }}{% if result.journal|length > 30 %}...{% endif %}</span>
                                 {% endif %}
                                 {% if result.doi %}
-                                <span class="badge bg-dark me-2">DOI</span>
+                                <span class="badge bg-dark me-2 mb-1">DOI</span>
                                 {% endif %}
                                 {% if result.full_text_available %}
-                                <span class="badge bg-success me-2">Full Text</span>
+                                <span class="badge bg-success me-2 mb-1">Full Text</span>
                                 {% endif %}
-                                <span class="badge bg-secondary">{{ result.source }}</span>
+                                <span class="badge bg-secondary mb-1">{{ result.source }}</span>
                             </div>
                             
                             <!-- Abstract -->
                             <div class="mb-4">
                                 <h6 class="d-flex justify-content-between align-items-center">
                                     <span>Abstract</span>
-                                    <small class="text-muted">{{ result.abstract|length }} characters</small>
+                                    <small class="text-muted desktop-only">{{ result.abstract|length }} characters</small>
                                 </h6>
                                 <div class="abstract-text">
                                     {{ result.abstract }}
@@ -304,7 +561,7 @@
                             
                             <!-- Citations Preview -->
                             {% if result.citations_formatted and result.citations_formatted.APA %}
-                            <div class="mb-4">
+                            <div class="mb-4 desktop-only">
                                 <h6>Citation Preview</h6>
                                 <div class="citation-box">
                                     <strong>APA:</strong> {{ result.citations_formatted.APA[:200] }}...
@@ -316,27 +573,27 @@
                             {% endif %}
                             
                             <!-- Action Buttons -->
-                            <div class="d-flex justify-content-between align-items-center action-buttons">
-                                <div>
+                            <div class="d-flex flex-wrap justify-content-between align-items-center action-buttons">
+                                <div class="mb-2 mb-md-0">
                                     {% if result.url %}
                                     <a href="{{ result.url }}" target="_blank" class="btn btn-sm btn-primary">
-                                        <i class="bi bi-link-45deg"></i> Source
+                                        <i class="bi bi-link-45deg"></i> <span class="desktop-only">Source</span>
                                     </a>
                                     {% endif %}
                                     {% if result.pdf_url %}
                                     <a href="{{ result.pdf_url }}" target="_blank" class="btn btn-sm btn-danger">
-                                        <i class="bi bi-file-pdf"></i> PDF
+                                        <i class="bi bi-file-pdf"></i> <span class="desktop-only">PDF</span>
                                     </a>
                                     {% endif %}
                                     <button class="btn btn-sm btn-outline-info" onclick="showCitations({{ loop.index0 }})">
-                                        <i class="bi bi-quote"></i> Citations
+                                        <i class="bi bi-quote"></i> <span class="desktop-only">Citations</span>
                                     </button>
                                     <button class="btn btn-sm btn-outline-success" onclick="copyReference({{ loop.index0 }})">
-                                        <i class="bi bi-clipboard-check"></i> Copy
+                                        <i class="bi bi-clipboard-check"></i> <span class="desktop-only">Copy</span>
                                     </button>
                                 </div>
                                 <div class="text-end">
-                                    <small class="text-muted">
+                                    <small class="text-muted desktop-only">
                                         ID: {{ result.id or loop.index0 }}
                                     </small>
                                 </div>
@@ -409,23 +666,23 @@
                                 <h6><i class="bi bi-download me-2"></i>Export Options</h6>
                                 <div class="row g-2">
                                     <div class="col-6">
-                                        <button class="btn btn-outline-primary w-100 export-btn" onclick="exportResults('csv')">
-                                            <i class="bi bi-file-earmark-spreadsheet"></i> CSV
+                                        <button class="btn btn-outline-primary w-100" onclick="exportResults('csv')">
+                                            <i class="bi bi-file-earmark-spreadsheet"></i> <span class="desktop-only">CSV</span>
                                         </button>
                                     </div>
                                     <div class="col-6">
-                                        <button class="btn btn-outline-primary w-100 export-btn" onclick="exportResults('bibtex')">
-                                            <i class="bi bi-code-slash"></i> BibTeX
+                                        <button class="btn btn-outline-primary w-100" onclick="exportResults('bibtex')">
+                                            <i class="bi bi-code-slash"></i> <span class="desktop-only">BibTeX</span>
                                         </button>
                                     </div>
                                     <div class="col-6">
-                                        <button class="btn btn-outline-primary w-100 export-btn" onclick="exportResults('json')">
-                                            <i class="bi bi-filetype-json"></i> JSON
+                                        <button class="btn btn-outline-primary w-100" onclick="exportResults('json')">
+                                            <i class="bi bi-filetype-json"></i> <span class="desktop-only">JSON</span>
                                         </button>
                                     </div>
                                     <div class="col-6">
                                         <button class="btn btn-outline-secondary w-100" onclick="clearCache()">
-                                            <i class="bi bi-trash"></i> Clear Cache
+                                            <i class="bi bi-trash"></i> <span class="desktop-only">Clear Cache</span>
                                         </button>
                                     </div>
                                 </div>
@@ -449,7 +706,7 @@
                                         </small>
                                     </div>
                                 </div>
-                                <div class="progress mb-2 progress-bar-custom">
+                                <div class="progress mb-2" style="height: 8px;">
                                     <div class="progress-bar {{ level|lower|replace(' ', '-') }}" 
                                          style="width: {{ (count / results|length * 100)|round }}%"
                                          role="progressbar"></div>
@@ -468,6 +725,16 @@
                                     <span>Avg Reliability:</span>
                                     <span>{{ "%.2f"|format(results|map(attribute='reliability_score')|sum / results|length) }}</span>
                                 </div>
+                                {% if stats %}
+                                <div class="d-flex justify-content-between">
+                                    <span>Recent Papers:</span>
+                                    <span>{{ stats.recent_papers }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Full Text:</span>
+                                    <span>{{ stats.full_text_available }}</span>
+                                </div>
+                                {% endif %}
                                 {% endif %}
                             </div>
                         </div>
@@ -511,12 +778,27 @@
         </div>
     </div>
 
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="d-none" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;">
-        <div class="text-center">
-            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
-            <p class="mt-3">Processing...</p>
-        </div>
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="btn btn-primary rounded-circle shadow-lg mobile-only" 
+            style="position: fixed; bottom: 70px; right: 20px; width: 50px; height: 50px; display: none; z-index: 999;">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <!-- Mobile Action Bar -->
+    <div class="mobile-only" style="height: 60px;"></div>
+    <div class="mobile-action-bar mobile-only fixed-bottom bg-white shadow-lg p-2 d-flex justify-content-around">
+        <button class="btn btn-outline-primary flex-fill mx-1" onclick="selectAll()">
+            <i class="bi bi-check-all"></i>
+        </button>
+        <button class="btn btn-outline-primary flex-fill mx-1" onclick="synthesize('summary')">
+            <i class="bi bi-file-text"></i>
+        </button>
+        <button class="btn btn-outline-success flex-fill mx-1" onclick="exportResults('csv')">
+            <i class="bi bi-download"></i>
+        </button>
+        <button class="btn btn-outline-info flex-fill mx-1" onclick="showMobileFilters()">
+            <i class="bi bi-funnel"></i>
+        </button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -528,23 +810,71 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateSelectedCount();
             initializeSearch();
+            setupMobileUI();
+            
+            // Show back to top button on scroll
+            window.addEventListener('scroll', function() {
+                const backToTopBtn = document.getElementById('backToTop');
+                if (window.scrollY > 300) {
+                    backToTopBtn.style.display = 'block';
+                } else {
+                    backToTopBtn.style.display = 'none';
+                }
+            });
+            
+            // Back to top functionality
+            document.getElementById('backToTop').addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         });
         
+        function setupMobileUI() {
+            // Add touch event listeners for better mobile experience
+            document.querySelectorAll('.result-card').forEach(card => {
+                card.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.99)';
+                });
+                
+                card.addEventListener('touchend', function() {
+                    this.style.transform = '';
+                });
+            });
+            
+            // Prevent zoom on double tap
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+        }
+        
         function initializeSearch() {
-            // Auto-focus search input
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.focus();
-                searchInput.select();
+            // Auto-focus search input on desktop
+            if (window.innerWidth > 768) {
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.focus();
+                    searchInput.select();
+                }
             }
         }
         
         function clearSearch() {
             document.getElementById('searchInput').value = '';
-            document.getElementById('searchInput').focus();
+            if (window.innerWidth > 768) {
+                document.getElementById('searchInput').focus();
+            }
         }
         
         function clearCache() {
+            showLoading();
+            
             fetch('/clear_cache', {
                 method: 'POST',
                 headers: {
@@ -553,10 +883,13 @@
             })
             .then(response => response.json())
             .then(data => {
-                alert('Cache cleared successfully');
+                hideLoading();
+                showToast('Cache cleared successfully', 'success');
             })
             .catch(error => {
+                hideLoading();
                 console.error('Cache clear error:', error);
+                showToast('Failed to clear cache', 'error');
             });
         }
         
@@ -580,6 +913,7 @@
                 cb.checked = true;
                 toggleResultSelection(parseInt(cb.dataset.index), true);
             });
+            showToast('All results selected', 'info');
         }
         
         function deselectAll() {
@@ -587,6 +921,7 @@
                 cb.checked = false;
                 toggleResultSelection(parseInt(cb.dataset.index), false);
             });
+            showToast('All results deselected', 'info');
         }
         
         function filterBySource(source) {
@@ -598,6 +933,8 @@
                     card.style.display = 'none';
                 }
             });
+            showToast(`Filtered by: ${source}`, 'info');
+            hideMobileFilters();
         }
         
         function filterByReliability(level) {
@@ -609,6 +946,16 @@
                     card.style.display = 'none';
                 }
             });
+            showToast(`Filtered by reliability: ${level}`, 'info');
+            hideMobileFilters();
+        }
+        
+        function showMobileFilters() {
+            document.getElementById('mobileFilters').classList.add('active');
+        }
+        
+        function hideMobileFilters() {
+            document.getElementById('mobileFilters').classList.remove('active');
         }
         
         function showCitations(index) {
@@ -625,7 +972,7 @@
                                 <div class="citation-box">
                                     ${citation}
                                     <button class="btn btn-sm btn-outline-secondary mt-2" 
-                                            onclick="copyToClipboard('${citation.replace(/'/g, "\\'").replace(/\n/g, '\\n')}')">
+                                            onclick="copyToClipboard('${escapeText(citation)}')">
                                         <i class="bi bi-clipboard"></i> Copy ${style}
                                     </button>
                                 </div>
@@ -637,40 +984,72 @@
             }
             
             document.getElementById('citationsModalBody').innerHTML = citationsHTML;
-            new bootstrap.Modal(document.getElementById('citationsModal')).show();
+            const modal = new bootstrap.Modal(document.getElementById('citationsModal'));
+            modal.show();
+        }
+        
+        function escapeText(text) {
+            return text.replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r');
         }
         
         function copyReference(index) {
             const result = searchResults[index];
             const reference = `${(result.authors || ['Unknown']).join(', ')} (${result.year || 'Unknown'}). ${result.title || 'No title'}. ${result.journal || ''}`;
             copyToClipboard(reference);
-            showToast('Reference copied to clipboard');
         }
         
         function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                showToast('Copied to clipboard');
-            }).catch(err => {
+            // Create a temporary textarea element
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('Copied to clipboard', 'success');
+                } else {
+                    // Fallback for mobile
+                    navigator.clipboard.writeText(text).then(() => {
+                        showToast('Copied to clipboard', 'success');
+                    }).catch(err => {
+                        console.error('Failed to copy:', err);
+                        showToast('Failed to copy to clipboard', 'error');
+                    });
+                }
+            } catch (err) {
                 console.error('Failed to copy:', err);
                 showToast('Failed to copy to clipboard', 'error');
-            });
+            }
+            
+            document.body.removeChild(textarea);
         }
         
         function copyAllCitations() {
             const citationDivs = document.querySelectorAll('#citationsModalBody .citation-box');
             let allText = '';
             citationDivs.forEach(div => {
-                const text = div.textContent.replace('Copy APA', '').replace('Copy MLA', '').replace('Copy Chicago', '').replace('Copy Harvard', '').replace('Copy IEEE', '').replace('Copy Vancouver', '').trim();
+                // Remove the copy button text
+                const text = div.textContent.replace(/Copy\s+\w+/g, '').trim();
                 allText += text + '\n\n';
             });
             copyToClipboard(allText);
         }
         
-        function showToast(message, type = 'success') {
-            // Create toast element
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toastId = 'toast-' + Date.now();
+            
             const toast = document.createElement('div');
-            toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+            toast.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast.id = toastId;
             toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
             toast.innerHTML = `
                 <div class="d-flex">
                     <div class="toast-body">
@@ -680,27 +1059,33 @@
                 </div>
             `;
             
-            document.body.appendChild(toast);
-            const bsToast = new bootstrap.Toast(toast);
+            toastContainer.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
             bsToast.show();
             
+            // Auto remove after 5 seconds
             setTimeout(() => {
-                toast.remove();
-            }, 3000);
+                const toastEl = document.getElementById(toastId);
+                if (toastEl) {
+                    toastEl.remove();
+                }
+            }, 5000);
         }
         
         function showLoading() {
             document.getElementById('loadingOverlay').classList.remove('d-none');
+            document.body.style.overflow = 'hidden';
         }
         
         function hideLoading() {
             document.getElementById('loadingOverlay').classList.add('d-none');
+            document.body.style.overflow = 'auto';
         }
         
         function synthesize(type) {
             const selected = document.querySelectorAll('.result-checkbox:checked');
             if (selected.length === 0) {
-                showToast('Please select at least one source', 'error');
+                showToast('Please select at least one source', 'warning');
                 return;
             }
             
@@ -752,7 +1137,7 @@
                         }
                     }
                     
-                    const escapedContent = content.replace(/'/g, "\\'").replace(/\n/g, '\\n');
+                    const escapedContent = escapeText(content);
                     
                     resultDiv.innerHTML = `
                         <button type="button" class="btn-close float-end" onclick="this.parentElement.classList.add('d-none')"></button>
@@ -821,7 +1206,7 @@
                     document.body.removeChild(a);
                     window.URL.revokeObjectURL(url);
                     
-                    showToast(`${format.toUpperCase()} export completed! ${data.count} records exported`);
+                    showToast(`${format.toUpperCase()} export completed! ${data.count} records exported`, 'success');
                 }
             })
             .catch(error => {
@@ -831,24 +1216,40 @@
             });
         }
         
-        // Add keyboard shortcuts
+        // Add keyboard shortcuts (for desktop)
         document.addEventListener('keydown', function(e) {
-            // Ctrl/Cmd + A to select all
-            if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
-                e.preventDefault();
-                selectAll();
-            }
-            // Escape to deselect all
-            if (e.key === 'Escape') {
-                deselectAll();
-            }
-            // Ctrl/Cmd + Enter to search
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                const searchForm = document.getElementById('searchForm');
-                if (searchForm) {
-                    searchForm.submit();
+            if (window.innerWidth > 768) {
+                // Ctrl/Cmd + A to select all
+                if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                    e.preventDefault();
+                    selectAll();
+                }
+                // Escape to deselect all
+                if (e.key === 'Escape') {
+                    deselectAll();
+                }
+                // Ctrl/Cmd + Enter to search
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    const searchForm = document.getElementById('searchForm');
+                    if (searchForm && document.getElementById('searchInput').value.trim()) {
+                        searchForm.submit();
+                    }
                 }
             }
+        });
+        
+        // Handle orientation change
+        window.addEventListener('orientationchange', function() {
+            setTimeout(initializeSearch, 100);
+        });
+        
+        // Handle resize
+        let resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                initializeSearch();
+            }, 250);
         });
     </script>
 </body>
